@@ -1,0 +1,18 @@
+# Git Menu
+
+Available git commands:
+
+## /git:status
+Show current branch and check for any pending changes
+
+## /git:catchup
+Merge dev-preview into main branch to catch up with latest changes
+
+## /git:startup
+Quick git status check at session start
+
+---
+
+**Tip**: For frequent commits, use `/commit` (available at root level)
+
+Which command would you like to run?

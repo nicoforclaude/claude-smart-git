@@ -35,9 +35,14 @@
   ],
   "commands": [
     {
-      "name": "git:commit",
-      "path": "commands/git/commit.md",
+      "name": "commit",
+      "path": "commands/commit.md",
       "description": "Commit your work with linting, smart analysis, and commit message generation"
+    },
+    {
+      "name": "git",
+      "path": "commands/git.md",
+      "description": "Git commands menu - access status, catchup, and startup commands"
     },
     {
       "name": "git:startup",

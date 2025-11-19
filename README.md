@@ -24,13 +24,17 @@ Intelligent git workflow tools for Claude Code with smart commit analysis and re
 - Working tree review and startup checks
 - Provides structured commit recommendations
 
-### Commands (4)
+### Commands (5)
 
-#### **/git:commit**
+#### **/commit** (frequently used)
 - Smart commit workflow with automated analysis
 - Linting integration
 - AI-generated commit messages
 - Pre-commit hook handling
+
+#### **/git** (menu)
+- Interactive menu for git commands
+- Quick access to status, catchup, and startup
 
 #### **/git:status**
 - Show current branch
@@ -95,16 +99,15 @@ Skill(skill: "git-changes-analyzer")
 ### Using Commands
 
 ```bash
-# Commit with smart analysis
-/git:commit
+# Commit with smart analysis (most frequently used)
+/commit
 
-# Check status
+# Open git commands menu
+/git
+
+# Or use specific git commands directly
 /git:status
-
-# Catch up main branch
 /git:catchup
-
-# Startup check
 /git:startup
 ```
 
@@ -157,4 +160,4 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ## Version History
 
-- **0.1.0** - Initial release with git-changes-analyzer skill, agent, and 4 commands
+- **0.1.0** - Initial release with git-changes-analyzer skill, agent, and 5 commands
