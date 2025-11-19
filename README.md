@@ -1,0 +1,160 @@
+# Claude Smart Git
+
+Intelligent git workflow tools for Claude Code with smart commit analysis and recommendations.
+
+## Overview
+
+`claude-smart-git` provides intelligent git workflow automation for Claude Code, featuring smart commit analysis, readiness assessment, and automated commit message generation.
+
+## What's Included
+
+### Skills (1)
+
+#### **git-changes-analyzer**
+- Analyzes git changes with readiness indicators (✅/🚧/⚠️/🗑️)
+- Recommends atomic commit strategies
+- Auto-triggers when analyzing or creating commits
+- Aliases: `git`, `commits`
+
+### Agents (1)
+
+#### **git-changes-analyzer-agent**
+- Autonomous analysis of git changes
+- Multi-commit workflow recommendations
+- Working tree review and startup checks
+- Provides structured commit recommendations
+
+### Commands (4)
+
+#### **/git:commit**
+- Smart commit workflow with automated analysis
+- Linting integration
+- AI-generated commit messages
+- Pre-commit hook handling
+
+#### **/git:status**
+- Show current branch
+- Check for pending changes
+- Quick status overview
+
+#### **/git:catchup**
+- Merge dev-preview into main branch
+- Automated branch synchronization
+
+#### **/git:startup**
+- Quick git status check at session start
+- Ensures clean working tree awareness
+
+## Installation
+
+### Prerequisites
+- Claude Code CLI installed
+- Git repository initialized
+
+### Steps
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/nicoforclaude/claude-smart-git.git
+   ```
+
+2. **Copy skills to your Claude setup**:
+   ```bash
+   cp -r claude-smart-git/skills/* ~/.claude/skills/
+   ```
+
+3. **Copy agents to your Claude setup**:
+   ```bash
+   cp -r claude-smart-git/agents/* ~/.claude/agents/
+   ```
+
+4. **Copy commands to your Claude setup**:
+   ```bash
+   cp -r claude-smart-git/commands/* ~/.claude/commands/
+   ```
+
+5. **Restart Claude Code** to load the new components
+
+## Usage
+
+### Automatic Activation
+
+The `git-changes-analyzer` skill activates automatically:
+- When analyzing commits
+- Before creating commits
+- During git workflow operations
+
+### Manual Activation
+
+Use the `Skill` tool to manually activate:
+
+```
+Skill(skill: "git-changes-analyzer")
+```
+
+### Using Commands
+
+```bash
+# Commit with smart analysis
+/git:commit
+
+# Check status
+/git:status
+
+# Catch up main branch
+/git:catchup
+
+# Startup check
+/git:startup
+```
+
+### Using Agents
+
+Launch the agent with the `Task` tool:
+
+```
+Task(subagent_type: "git-changes-analyzer-agent", prompt: "Analyze current changes")
+```
+
+## Features
+
+### Smart Commit Analysis
+
+The git-changes-analyzer provides:
+- **✅ Ready**: Changes are coherent and ready to commit
+- **🚧 In Progress**: Work is incomplete or mixed
+- **⚠️ Needs Review**: Suspicious patterns detected
+- **🗑️ Cleanup**: Temporary or debug code present
+
+### Atomic Commit Recommendations
+
+Analyzes working tree and suggests logical commit groupings:
+- Separate features from fixes
+- Isolate refactoring from functionality
+- Group related changes together
+
+### Intelligent Commit Messages
+
+Automatically generates:
+- Conventional commit format
+- Contextual descriptions
+- Focused on "why" not just "what"
+
+## Philosophy
+
+1. **Atomic commits** - One logical change per commit
+2. **Smart analysis** - AI-powered readiness assessment
+3. **Clean history** - Meaningful commit messages
+4. **Workflow automation** - Reduce manual git overhead
+
+## Support
+
+For issues or feature requests, please open an issue on [GitHub](https://github.com/nicoforclaude/claude-smart-git/issues).
+
+## License
+
+MIT License - See [LICENSE](LICENSE) file for details.
+
+## Version History
+
+- **0.1.0** - Initial release with git-changes-analyzer skill, agent, and 4 commands

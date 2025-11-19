@@ -1,0 +1,29 @@
+# Development
+.DS_Store
+*.log
+*.tmp
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Testing
+coverage/
+.nyc_output/
+
+# Build outputs
+dist/
+build/
+
+# Claude Code specific
+.claude/
+*.orig
