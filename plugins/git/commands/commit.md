@@ -1,7 +1,7 @@
 ---
 description: "Commit your work with linting, smart analysis, and commit message generation"
 argument-hint: ""
-allowed-tools: Task(subagent_type:linter-agent), Task(subagent_type:git-changes-analyzer-agent), Bash, AskUserQuestion, Skill(windows-filesystem)
+allowed-tools: Task(subagent_type:linter-agent), Task(subagent_type:git:changes-analyzer-agent), Bash, AskUserQuestion, Skill(windows-filesystem)
 ---
 
 # Commit
@@ -45,11 +45,11 @@ Task(
 
 ### Step 3: Analyze Changes
 
-Once linting passes, use the Task tool to launch the **git-changes-analyzer-agent**:
+Once linting passes, use the Task tool to launch the **changes-analyzer-agent**:
 
 ```
 Task(
-  subagent_type: "git-changes-analyzer-agent",
+  subagent_type: "git:changes-analyzer-agent",
   prompt: "Analyze current git changes and recommend commit strategy. Return structured analysis with files, messages, and reasoning. IMPORTANT: By default, include meaningful untracked files (documentation, configuration, source code, etc.) in commit recommendations.",
   model: "haiku"
 )
@@ -136,10 +136,10 @@ Do not add mentions of AI used (Claude, other) in this work, it's just a tool, n
    - Default: "Commits created successfully. Run `/clear` to start fresh or continue working."
 
 **If user selects "Split into multiple commits"** (single commit only):
-1. Re-invoke git-changes-analyzer-agent with explicit instruction to split changes:
+1. Re-invoke changes-analyzer-agent with explicit instruction to split changes:
 ```
 Task(
-  subagent_type: "git-changes-analyzer-agent",
+  subagent_type: "git:changes-analyzer-agent",
   prompt: "Re-analyze git changes and split them into multiple logical commits. Focus on separating concerns, layers (backend/frontend), or preparatory work vs features. Return multiple commits with files and messages for each. Do NOT execute any commits.",
   model: "haiku"
 )
@@ -200,7 +200,7 @@ Options:
                  │
                  ▼
 ┌─────────────────────────────────────┐
-│  Launch git-changes-analyzer-agent  │
+│  Launch changes-analyzer-agent      │
 │  • Analyze changes                  │
 │  • Return structured recommendation │
 └────────────────┬────────────────────┘
@@ -239,7 +239,7 @@ You are the coordinator AND executor. Your job is to:
 1. **Check for linting setup** - check project CLAUDE.md, skip if not configured
 2. **Launch linter-agent** (if applicable) with clear instructions
 3. **Parse linter-agent response** - block if it failed
-4. **Launch git-changes-analyzer-agent** to analyze changes
+4. **Launch changes-analyzer-agent** to analyze changes
 5. **Parse agent's structured output** - extract files, messages, strategy
 6. **Show clear summary** to user (not hidden in collapsed tools)
 7. **STOP and ASK user** using AskUserQuestion (with .gitignore warning if needed)

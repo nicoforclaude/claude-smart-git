@@ -10,15 +10,14 @@ Intelligent git workflow tools for Claude Code with smart commit analysis and re
 
 ### Skills (1)
 
-#### **git-changes-analyzer**
+#### **changes-analyzer**
 - Analyzes git changes with readiness indicators (✅/🚧/⚠️/🗑️)
 - Recommends atomic commit strategies
 - Auto-triggers when analyzing or creating commits
-- Aliases: `git`, `commits`
 
 ### Agents (1)
 
-#### **git-changes-analyzer-agent**
+#### **changes-analyzer-agent**
 - Autonomous analysis of git changes
 - Multi-commit workflow recommendations
 - Working tree review and startup checks
@@ -63,7 +62,7 @@ Intelligent git workflow tools for Claude Code with smart commit analysis and re
 
 **Step 2: Install the plugin**
 ```shell
-/plugin install smart-git@claude-smart-git
+/plugin install git@claude-smart-git
 ```
 
 Or browse and install interactively:
@@ -82,7 +81,7 @@ Check the plugin is installed:
 
 If you previously installed components directly, remove them first:
 ```shell
-/plugin uninstall smart-git
+/plugin uninstall git
 ```
 
 Then follow the installation steps above.
@@ -91,7 +90,7 @@ Then follow the installation steps above.
 
 ### Automatic Activation
 
-The `git-changes-analyzer` skill activates automatically:
+The `changes-analyzer` skill activates automatically:
 - When analyzing commits
 - Before creating commits
 - During git workflow operations
@@ -101,7 +100,7 @@ The `git-changes-analyzer` skill activates automatically:
 Use the `Skill` tool to manually activate:
 
 ```
-Skill(skill: "git-changes-analyzer")
+Skill(skill: "git:changes-analyzer")
 ```
 
 ### Using Commands
@@ -124,14 +123,14 @@ Skill(skill: "git-changes-analyzer")
 Launch the agent with the `Task` tool:
 
 ```
-Task(subagent_type: "git-changes-analyzer-agent", prompt: "Analyze current changes")
+Task(subagent_type: "git:changes-analyzer-agent", prompt: "Analyze current changes")
 ```
 
 ## Features
 
 ### Smart Commit Analysis
 
-The git-changes-analyzer provides:
+The changes-analyzer provides:
 - **✅ Ready**: Changes are coherent and ready to commit
 - **🚧 In Progress**: Work is incomplete or mixed
 - **⚠️ Needs Review**: Suspicious patterns detected
@@ -170,7 +169,7 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 - **0.2.0** - Restructured to plugin marketplace architecture
   - Migrated to `.claude-plugin` structure
-  - Added `smart-git` plugin containing all components
+  - Added `git` plugin containing all components
   - Updated installation instructions for plugin approach
   - **Breaking change**: Requires plugin installation method
 - **0.1.0** - Initial release with git-changes-analyzer skill, agent, and 5 commands

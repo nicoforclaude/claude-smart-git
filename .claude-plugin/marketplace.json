@@ -6,8 +6,8 @@
   "description": "Intelligent git workflow with smart commit analysis and recommendations",
   "plugins": [
     {
-      "name": "smart-git",
-      "source": "./plugins/smart-git",
+      "name": "git",
+      "source": "./plugins/git",
       "description": "Smart git workflow with commit analysis, atomic commit recommendations, and automated workflow"
     }
   ]
