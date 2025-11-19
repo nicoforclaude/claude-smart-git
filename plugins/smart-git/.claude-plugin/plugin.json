@@ -1,0 +1,8 @@
+{
+  "name": "smart-git",
+  "description": "Smart git workflow with commit analysis, atomic commit recommendations, and automated workflow",
+  "version": "0.2.0",
+  "author": {
+    "name": "Nico"
+  }
+}

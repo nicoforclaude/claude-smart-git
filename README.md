@@ -52,32 +52,46 @@ Intelligent git workflow tools for Claude Code with smart commit analysis and re
 ## Installation
 
 ### Prerequisites
-- Claude Code CLI installed
+- Claude Code CLI with plugin support
 - Git repository initialized
 
-### Steps
+### Plugin Installation
 
-1. **Clone the repository**:
+1. **Clone the marketplace**:
    ```bash
    git clone https://github.com/nicoforclaude/claude-smart-git.git
+   cd claude-smart-git
    ```
 
-2. **Copy skills to your Claude setup**:
+2. **Install the plugin**:
+
+   The marketplace contains the `smart-git` plugin. Claude Code will automatically discover plugins in the `.claude-plugin` structure.
+
+   **Option A: Link the entire marketplace** (recommended for development):
    ```bash
-   cp -r claude-smart-git/skills/* ~/.claude/skills/
+   # From your workspace
+   ln -s /path/to/claude-smart-git ~/.claude/marketplaces/claude-smart-git
    ```
 
-3. **Copy agents to your Claude setup**:
+   **Option B: Copy plugin directly**:
    ```bash
-   cp -r claude-smart-git/agents/* ~/.claude/agents/
+   cp -r plugins/smart-git ~/.claude/plugins/
    ```
 
-4. **Copy commands to your Claude setup**:
-   ```bash
-   cp -r claude-smart-git/commands/* ~/.claude/commands/
-   ```
+3. **Restart Claude Code** to load the plugin
 
-5. **Restart Claude Code** to load the new components
+### Upgrading from v0.1.0
+
+If you previously installed components directly, remove them first:
+```bash
+rm -rf ~/.claude/skills/git-changes-analyzer
+rm ~/.claude/agents/git-changes-analyzer-agent.md
+rm ~/.claude/commands/commit.md
+rm ~/.claude/commands/git.md
+rm -rf ~/.claude/commands/git/
+```
+
+Then follow the plugin installation steps above.
 
 ## Usage
 
@@ -160,4 +174,9 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ## Version History
 
+- **0.2.0** - Restructured to plugin marketplace architecture
+  - Migrated to `.claude-plugin` structure
+  - Added `smart-git` plugin containing all components
+  - Updated installation instructions for plugin approach
+  - **Breaking change**: Requires plugin installation method
 - **0.1.0** - Initial release with git-changes-analyzer skill, agent, and 5 commands

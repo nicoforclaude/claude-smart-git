@@ -1,0 +1,14 @@
+{
+  "name": "claude-smart-git",
+  "owner": {
+    "name": "Nico"
+  },
+  "description": "Intelligent git workflow with smart commit analysis and recommendations",
+  "plugins": [
+    {
+      "name": "smart-git",
+      "source": "./plugins/smart-git",
+      "description": "Smart git workflow with commit analysis, atomic commit recommendations, and automated workflow"
+    }
+  ]
+}
