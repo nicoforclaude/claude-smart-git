@@ -53,45 +53,39 @@ Intelligent git workflow tools for Claude Code with smart commit analysis and re
 
 ### Prerequisites
 - Claude Code CLI with plugin support
-- Git repository initialized
 
-### Plugin Installation
+### Quick Installation
 
-1. **Clone the marketplace**:
-   ```bash
-   git clone https://github.com/nicoforclaude/claude-smart-git.git
-   cd claude-smart-git
-   ```
+**Step 1: Add the marketplace**
+```shell
+/plugin marketplace add https://github.com/nicoforclaude/claude-smart-git
+```
 
-2. **Install the plugin**:
+**Step 2: Install the plugin**
+```shell
+/plugin install smart-git@claude-smart-git
+```
 
-   The marketplace contains the `smart-git` plugin. Claude Code will automatically discover plugins in the `.claude-plugin` structure.
+Or browse and install interactively:
+```shell
+/plugin
+```
 
-   **Option A: Link the entire marketplace** (recommended for development):
-   ```bash
-   # From your workspace
-   ln -s /path/to/claude-smart-git ~/.claude/marketplaces/claude-smart-git
-   ```
+### Verification
 
-   **Option B: Copy plugin directly**:
-   ```bash
-   cp -r plugins/smart-git ~/.claude/plugins/
-   ```
-
-3. **Restart Claude Code** to load the plugin
+Check the plugin is installed:
+```shell
+/plugin list
+```
 
 ### Upgrading from v0.1.0
 
 If you previously installed components directly, remove them first:
-```bash
-rm -rf ~/.claude/skills/git-changes-analyzer
-rm ~/.claude/agents/git-changes-analyzer-agent.md
-rm ~/.claude/commands/commit.md
-rm ~/.claude/commands/git.md
-rm -rf ~/.claude/commands/git/
+```shell
+/plugin uninstall smart-git
 ```
 
-Then follow the plugin installation steps above.
+Then follow the installation steps above.
 
 ## Usage
 
