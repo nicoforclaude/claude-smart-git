@@ -14,7 +14,7 @@ allowed-tools: Bash(pwd:*), Bash(git status:*), Bash(git rev-parse:*)
 First, show the working directory to the user.
 
 For git status:
-- If working directory is the root commander location (e.g., C:\KolyaRepositories), navigate to .claude folder first: `cd .claude && git status`
+- If working directory is the root commander location (e.g., your workspace root), navigate to .claude folder first: `cd .claude && git status`
 - For child repos, just use the git status result as is
 
 You should say either:

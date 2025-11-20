@@ -5,98 +5,70 @@ description: Analyzes git changes and recommends atomic commit strategies with r
 
 # Git Changes Analyzer Skill
 
-This skill defines the logic of processing git repository changes to recommend logical grouping into atomic commits, along with readiness assessment.
+Analyzes git working tree and recommends atomic commit groupings with readiness assessment.
 
-## Core Steps of Analysis
+## How It Works
 
-1. **Analyze Changes**: Understand what changed in the working tree
-2. **Group Logically**: Group related changes by topic, type, and scope
-3. **Assess Readiness**: Judge if changes are ready to commit or still WIP
-4. **Recommend Strategy**: Suggest how to split into atomic commits
-5. **Generate Messages**: Draft commit messages following conventions
+### 1. Understanding Changes
 
-## Analysis Process
+Classify each file by examining:
+- **Path & extension** → determines change type (feat/fix/refactor/docs/claude/chore/test/style/perf)
+- **Scope** → which component/package affected
+- **Topic** → what high-level goal this serves
 
-### Prerequisites
+**Classification rules:**
+- Files under `.claude/` → use `claude` type (even .md files - they're scripts/config)
+- User docs outside `.claude/` → use `docs` type
+- Path check takes priority over extension
 
-You will be provided with git command outputs:
-- `git status` - All changes (staged and unstaged)
-- `git diff --stat` - File-level statistics
-- `git diff` - Full diff for readiness assessment
+### 2. Assessing Readiness
 
-### Step 1: Classify Changes
+Scan diff content for quality signals:
 
-For each changed file, determine:
+**✅ Ready** - Clean, complete, conventional:
+- No TODO/FIXME/WIP markers
+- No debug logging (console.log, print, debugger)
+- Complete implementations with error handling
+- Updated tests and docs
+- Follows project conventions
 
-**Change Type:**
-- `feat` - New feature or functionality
-- `fix` - Bug fix
-- `refactor` - Code restructuring without behavior change
-- `docs` - User-facing documentation only (README, user guides, tutorials)
-- `claude` - Claude Code tooling (`.claude/` - commands, agents, skills, settings)
-  - **IMPORTANT**: `.md` files under `.claude/` are scripts/config, NOT docs - use `claude` type
-- `style` - Formatting, whitespace
-- `test` - Test files
-- `chore` - Build, config, dependencies
-- `perf` - Performance improvements
+**🚧 WIP** - Incomplete or experimental:
+- TODO/FIXME/XXX/HACK comments
+- Debug statements or commented code
+- Partial implementations (throw "Not implemented")
+- Missing tests or docs for new features
 
-**Classification Priority:**
-1. Check file path first: If under `.claude/` directory → use `claude` type
-2. Then check file extension and content for other types
-3. Use `docs` ONLY for user-facing documentation outside `.claude/`
+**⚠️ Needs Review** - Mixed concerns or unclear:
+- Large refactors mixed with features
+- Changes across many unrelated files
+- Unclear intent
+- Breaking changes without migration
 
-**Scope/Module:**
-- Which component, package, or subsystem is affected
-- Entry points vs supporting files
+**🗑️ Should Remove** - Unwanted artifacts:
+- Temp files (nul, .DS_Store, Thumbs.db)
+- Editor backups (*.swp, *~)
+- Debug output
+- Commented-out code
 
-**Topic/Feature:**
-- What high-level goal does this change serve
-- Group related files by common purpose
+### 3. Grouping Into Commits
 
-### Step 3: Assess Readiness
+**Prioritize topic grouping over file type:**
+- Group by **what** (topic/feature: "linting", "root commander", "git operations")
+- Not by **form** (file type: skills vs commands vs agents)
+- Example: "Remove linting plugin assets" includes agent + skill + commands together
 
-For each group, judge readiness level:
+Apply atomic commit principles:
+- One purpose per commit
+- Related changes stay together (by topic, not by file extension)
+- Unrelated changes separated
+- Order by dependencies (prerequisites first)
 
-- ✅ **Ready to commit**: Changes are complete, coherent, and functional
-  - No TODO/FIXME comments added
-  - No debug logging or commented code
-  - Follows project conventions
-  - All related changes present (no half-implemented features)
+Each commit gets:
+- Conventional message ([type]([scope]): [description])
+- Readiness assessment
+- Priority/dependency status
 
-- 🚧 **Work in progress**: Incomplete or experimental
-  - Contains TODO/FIXME/WIP markers
-  - Debug code or console.log statements
-  - Incomplete implementation
-  - Missing tests or documentation for new features
-
-- ⚠️ **Needs review**: Unclear or mixed concerns
-  - Multiple unrelated changes in same files
-  - Unclear intent or purpose
-  - Mix of refactor + feature
-  - Potential breaking changes
-
-- 🗑️ **Should remove**: Accidental or unwanted changes
-  - Temporary files (nul, .DS_Store, etc.)
-  - Debug artifacts
-  - Unintended whitespace changes
-  - Commented-out code
-
-### Step 3: Identify Dependencies
-
-Determine commit order:
-- Changes that others depend on must come first
-- Independent changes can be committed in any order
-- Flag circular dependencies
-
-### Step 4: Recommend Commit Strategy
-
-Group files into logical commits:
-- Each commit should be atomic (one purpose)
-- Each commit should be complete (tests pass)
-- Related changes stay together
-- Unrelated changes are separated
-
-## Output Format
+### 4. Generating Output
 
 Provide structured analysis in this format:
 
@@ -137,49 +109,17 @@ Commit [N]: [Brief description] ([M] files) [Readiness emoji]
 [Suggested commands or actions]
 ```
 
-## Readiness Assessment Guidelines
+## Usage
 
-When analyzing diff content, look for:
+Invoked by `/git:commit` command which provides git status and diff output.
 
-**✅ Ready indicators:**
-- Clean, purposeful changes
-- Consistent style and formatting
-- Complete implementations
-- Proper error handling
-- Updated tests and docs
+See `examples.md` and `commit-patterns.md` for detailed scenarios.
 
-**🚧 WIP indicators:**
-- `TODO`, `FIXME`, `WIP`, `XXX`, `HACK` comments
-- `console.log`, `print`, `debugger` statements
-- Commented-out code blocks
-- Incomplete function implementations (throw new Error("Not implemented"))
-- Missing error handling
+## Important Constraints
 
-**⚠️ Needs Review indicators:**
-- Large refactors mixed with features
-- Changes to many unrelated files
-- Unusual patterns or approaches
-- Breaking changes without migration path
-
-**🗑️ Should Remove indicators:**
-- Files named `nul`, `undefined`, `null`
-- System files (`.DS_Store`, `Thumbs.db`)
-- Editor backup files (`*.swp`, `*~`)
-- Large debug output files
-
-## Integration with Commands
-
-This skill is invoked by `/git_prepare_commits` command which provides git status and diff output.
-
-## Additional Resources
-
-See `examples.md` and `commit-patterns.md` for detailed patterns and scenarios.
-
-## Important Notes
-
-- **Never auto-commit** - Only analyze and recommend
-- **Respect atomic commits** - Don't group unrelated changes
-- **Consider reviewability** - Smaller, focused commits are better
-- **Follow project conventions** - Match existing commit message style
-- **Be cautious with WIP** - Clearly flag incomplete work
+- Never auto-commit - only analyze and recommend
+- Respect atomic commits - don't group unrelated changes
+- Smaller focused commits preferred for reviewability
+- Match existing project commit message style
+- Clearly flag incomplete work
 
