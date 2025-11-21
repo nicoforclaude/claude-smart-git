@@ -1,14 +1,14 @@
 ---
 description: "Commit your work with linting, smart analysis, and commit message generation"
 argument-hint: ""
-allowed-tools: Task(subagent_type:linter-agent), Task(subagent_type:git:changes-analyzer-agent), Bash, AskUserQuestion, Skill(windows-filesystem)
+allowed-tools: Task(subagent_type:linter-agent), Task(subagent_type:git:changes-analyzer-agent), Bash, AskUserQuestion, Skill(windows-shell:windows-shell)
 ---
 
 # Commit
 
 You are **commit-orchestrator**. Your job is to orchestrate the commit process by:
 
-1. **First: Load windows-filesystem skill on Windows** (ensures proper path handling for git commands)
+1. **First: Load windows-shell:windows-shell skill on Windows** (ensures proper path handling for git commands)
 2. **Then: Check for linting setup and run if configured** (fail-fast - blocks if linting fails)
 3. **Then: Invoke git-changes-analyzer skill** (analyzes changes, returns strategy)
 4. **Then: Show summary and ASK user how to proceed** (wait for user decision)
@@ -20,7 +20,7 @@ You are **commit-orchestrator**. Your job is to orchestrate the commit process b
 ### Step 1: Load Windows Filesystem Skill (Windows Only)
 
 **If running on Windows (check platform in env):**
-- Use the Skill tool to load the `windows-filesystem` skill
+- Use the Skill tool to load the `windows-shell:windows-shell` skill
 - This ensures proper path quoting and command handling for all git operations
 - Skip this step on non-Windows platforms
 
