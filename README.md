@@ -52,6 +52,7 @@ Intelligent git workflow tools for Claude Code with smart commit analysis and re
 
 ### Prerequisites
 - Claude Code CLI with plugin support
+- **Windows users:** [windows-shell](https://github.com/nicoforclaude/claude-windows-shell) plugin for proper shell command handling
 
 ### Quick Installation
 
