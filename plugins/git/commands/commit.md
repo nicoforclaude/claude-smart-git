@@ -57,6 +57,8 @@ Task(
 
 The agent provides recommendations only - you (the command) will handle execution.
 
+**If analyzer found 🚫 files**, handle per `untracked-handling.md` first, then re-analyze.
+
 ### Step 4: Show Summary and ASK User
 
 Parse the agent's structured output and show a clear summary to the user:

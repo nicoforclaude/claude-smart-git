@@ -1,6 +1,6 @@
 ---
 name: changes-analyzer-agent
-description: Analyzes git changes and recommends atomic commit strategies with readiness assessment (✅/🚧/⚠️/🗑️). Use for multi-commit workflows and working tree review (including startup check).
+description: Analyzes git changes and recommends atomic commit strategies with readiness assessment (✅/🚧/⚠️/🗑️/🚫). Use for multi-commit workflows and working tree review (including startup check).
 tools: Bash, Skill
 model: haiku
 color: blue

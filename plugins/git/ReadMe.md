@@ -5,7 +5,7 @@ Intelligent git workflow automation with smart commit analysis.
 ## Components
 
 ### Skill: changes-analyzer
-Analyzes git changes with readiness indicators (✅/🚧/⚠️/🗑️) and recommends atomic commit strategies.
+Analyzes git changes with readiness indicators (✅/🚧/⚠️/🗑️/🚫) and recommends atomic commit strategies.
 
 ### Agent: changes-analyzer-agent
 Autonomous analysis of working tree with multi-commit workflow recommendations.

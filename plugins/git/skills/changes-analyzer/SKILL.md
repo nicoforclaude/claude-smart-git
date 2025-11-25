@@ -1,6 +1,6 @@
 ---
 name: changes-analyzer
-description: Analyzes git changes and recommends atomic commit strategies with readiness assessment (✅/🚧/⚠️/🗑️). Use for multi-commit workflows and working tree review (including startup check).
+description: Analyzes git changes and recommends atomic commit strategies with readiness assessment (✅/🚧/⚠️/🗑️/🚫). Use for multi-commit workflows and working tree review (including startup check).
 ---
 
 # Git Changes Analyzer Skill
@@ -49,6 +49,8 @@ Scan diff content for quality signals:
 - Editor backups (*.swp, *~)
 - Debug output
 - Commented-out code
+
+**🚫 Local Only** - See `untracked.md` for patterns
 
 ### 3. Grouping Into Commits
 
@@ -113,7 +115,7 @@ Commit [N]: [Brief description] ([M] files) [Readiness emoji]
 
 Invoked by `/git:commit` command which provides git status and diff output.
 
-See `examples.md` and `commit-patterns.md` for detailed scenarios.
+See `examples.md`, `commit-patterns.md`, `untracked.md`, and `untracked-handling.md` for detailed scenarios.
 
 ## Important Constraints
 
