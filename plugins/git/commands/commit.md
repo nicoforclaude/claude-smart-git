@@ -57,11 +57,11 @@ Task(
 
 The agent provides recommendations only - you (the command) will handle execution.
 
-**If analyzer found 🚫 files**, handle before proceeding:
+**If analyzer found 🚫 files** (Local Only or Suspicious), handle before proceeding:
 <!-- inlined from /docs/untracked-handling.md -->
-1. Add pattern to `.gitignore`
-2. Untrack if already tracked: `git rm --cached <file>`
-3. Commit: `chore(git): ignore local config files`
+1. Show user which files were flagged and why
+2. Suggest pattern to add to `.gitignore`
+3. If user agrees: add pattern, untrack if needed (`git rm --cached <file>`), commit: `chore(git): ignore local/sensitive files`
 Handle as **first commit** (Priority 0) before user's actual work.
 <!-- end inlined -->
 Then re-analyze.

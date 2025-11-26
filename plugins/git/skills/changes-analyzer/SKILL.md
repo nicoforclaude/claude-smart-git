@@ -57,6 +57,14 @@ Scan diff content for quality signals:
 - `.env.local` - Local environment overrides
 <!-- end inlined -->
 
+**🚫 Suspicious (suggest gitignore)** - Flag and suggest adding to `.gitignore`:
+- `.local/` directories - local data/cache
+- `errors/`, `logs/`, `debug/` directories with debug output
+- `.env*` files (except `.env.example`)
+- `*secret*`, `*credentials*`, `*password*`, `*token*` in filename
+- `*.log`, `*.bak`, `*.backup` files
+- IDE/editor folders: `.idea/`, `.vscode/settings.json`, `*.code-workspace`
+
 ### 3. Grouping Into Commits
 
 **Prioritize topic grouping over file type:**

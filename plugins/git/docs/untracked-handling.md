@@ -1,12 +1,12 @@
-# Handling 🚫 Local-Only Files
+# Handling 🚫 Files (Local-Only and Suspicious)
 
 When analyzer detects 🚫 files, fix before proceeding with user's commit.
 
 ## Steps
 
-1. Add pattern to `.gitignore`
-2. Untrack if already tracked: `git rm --cached <file>`
-3. Commit: `chore(git): ignore local config files`
+1. Show user which files were flagged and why
+2. Suggest pattern to add to `.gitignore`
+3. If user agrees: add pattern, untrack if needed (`git rm --cached <file>`), commit: `chore(git): ignore local/sensitive files`
 
 ## Priority
 
