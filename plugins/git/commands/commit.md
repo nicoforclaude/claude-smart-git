@@ -106,7 +106,8 @@ After .gitignore confirmation (or if no .gitignore), use AskUserQuestion:
 ```
 Question: "Proceed with this commit?"
 Options:
-  - "Yes, commit now"
+  - "Commit and push"           ← default/first option
+  - "Commit only"
   - "Split into multiple commits" (only show if: 2+ files AND agent could reasonably split them)
   - "Show full diff"
   - "Cancel"
@@ -120,13 +121,19 @@ Note: Omit "Split into multiple commits" option if:
 ```
 Question: "How would you like to proceed?"
 Options:
-  - "Commit all"
+  - "Commit all and push"       ← default/first option
+  - "Commit all (no push)"
   - "Select specific commits"
   - "Show full diff"
   - "Cancel"
 ```
 
-**If user selects "Yes, commit now" or "Commit all"**:
+**If user selects "Commit and push", "Commit only", "Commit all and push", or "Commit all (no push)"**:
+
+Track whether push was requested:
+- `shouldPush = true` if user selected "Commit and push" or "Commit all and push"
+- `shouldPush = false` if user selected "Commit only" or "Commit all (no push)"
+
 1. Stage files using `git add [files]`
 2. Create commit(s) using heredoc format:
 ```bash
@@ -139,7 +146,12 @@ EOF
 Do not add mentions of AI used (Claude, other) in this work, it's just a tool, no need to clutter and add readers' cognitive load.
 
 3. Report success with commit hash(es)
-4. **Suggest next action** based on context:
+
+4. **If shouldPush is true**: Execute `git push`
+   - On success: Report "Pushed to origin/[branch]"
+   - On error: Display the git error message as-is (user handles resolution manually)
+
+5. **Suggest next action** based on context:
    - If conversation has significant context (>50k tokens): "Consider running `/compact` to reduce context size while preserving important information."
    - If conversation is focused on this commit only: "Work complete! You can run `/clear` to start fresh."
    - Default: "Commits created successfully. Run `/clear` to start fresh or continue working."
@@ -223,8 +235,12 @@ Options:
 │  • Ask user for confirmation        │
 └────────────────┬────────────────────┘
                  │
-                 ├─[Yes/Commit all]──► Execute git commands
+                 ├─[Commit and push]──► Execute git commands
+                 │                      git push
                  │                      Report success
+                 │
+                 ├─[Commit only]──► Execute git commands
+                 │                  Report success (no push)
                  │
                  ├─[Split commits]──► Re-invoke skill with
                  │                    split instruction
@@ -263,7 +279,7 @@ You are the coordinator AND executor. Your job is to:
 - **DO execute git commands yourself** - don't delegate execution to agent
 - **DO warn about .gitignore changes** - require explicit confirmation
 - **DO NOT add AI attribution** - commits should be clean and professional
-- **DO NOT push** unless explicitly requested by user
+- **Push only when user selects push option** - "Commit and push" or "Commit all and push"
 - Use heredoc format for commit messages to handle multi-line properly
 
 ## Output Format
@@ -272,5 +288,6 @@ Your output should be clear and visible:
 
 1. **Linter results**: "Linting passed ✓" or "Linting failed - [errors]"
 2. **Commit preview**: Show files, message, strategy clearly
-3. **Confirmation prompt**: Ask user to proceed
+3. **Confirmation prompt**: Ask user to proceed (with push option as first choice)
 4. **Execution results**: "Commit created: [hash]" or error message
+5. **Push results** (if push selected): "Pushed to origin/[branch]" or error message
