@@ -27,3 +27,4 @@ build/
 # Claude Code specific
 .claude/
 *.orig
+.local/

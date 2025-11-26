@@ -57,7 +57,14 @@ Task(
 
 The agent provides recommendations only - you (the command) will handle execution.
 
-**If analyzer found 🚫 files**, handle per `untracked-handling.md` first, then re-analyze.
+**If analyzer found 🚫 files**, handle before proceeding:
+<!-- inlined from /docs/untracked-handling.md -->
+1. Add pattern to `.gitignore`
+2. Untrack if already tracked: `git rm --cached <file>`
+3. Commit: `chore(git): ignore local config files`
+Handle as **first commit** (Priority 0) before user's actual work.
+<!-- end inlined -->
+Then re-analyze.
 
 ### Step 4: Show Summary and ASK User
 

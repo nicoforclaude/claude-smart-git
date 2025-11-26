@@ -50,7 +50,12 @@ Scan diff content for quality signals:
 - Debug output
 - Commented-out code
 
-**🚫 Local Only** - See `untracked.md` for patterns
+**🚫 Local Only** - Files that should stay local but never be committed:
+<!-- inlined from /docs/untracked.md -->
+- `settings.local.json` - User-specific Claude Code settings
+- `*.local.json` - Any local JSON config
+- `.env.local` - Local environment overrides
+<!-- end inlined -->
 
 ### 3. Grouping Into Commits
 
@@ -115,7 +120,7 @@ Commit [N]: [Brief description] ([M] files) [Readiness emoji]
 
 Invoked by `/git:commit` command which provides git status and diff output.
 
-See `examples.md`, `commit-patterns.md`, `untracked.md`, and `untracked-handling.md` for detailed scenarios.
+See `examples.md` and `commit-patterns.md` for detailed scenarios.
 
 ## Important Constraints
 
