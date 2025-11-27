@@ -6,6 +6,45 @@ Intelligent git workflow tools for Claude Code with smart commit analysis and re
 
 `claude-smart-git` provides intelligent git workflow automation for Claude Code, featuring smart commit analysis, readiness assessment, and automated commit message generation.
 
+## Installation
+
+### Prerequisites
+- Claude Code CLI with plugin support
+- **Windows users:** [windows-shell](https://github.com/nicoforclaude/claude-windows-shell) plugin for proper shell command handling
+
+### Quick Installation
+
+**Step 1: Add the marketplace**
+```shell
+/plugin marketplace add https://github.com/nicoforclaude/claude-smart-git
+```
+
+**Step 2: Install the plugin**
+```shell
+/plugin install git@claude-smart-git
+```
+
+Or browse and install interactively:
+```shell
+/plugin
+```
+
+### Verification
+
+Check the plugin is installed:
+```shell
+/plugin list
+```
+
+### Upgrading from v0.1.0
+
+If you previously installed components directly, remove them first:
+```shell
+/plugin uninstall git
+```
+
+Then follow the installation steps above.
+
 ## What's Included
 
 ### Skills (1)
@@ -47,45 +86,6 @@ Intelligent git workflow tools for Claude Code with smart commit analysis and re
 #### **/git:startup**
 - Quick git status check at session start
 - Ensures clean working tree awareness
-
-## Installation
-
-### Prerequisites
-- Claude Code CLI with plugin support
-- **Windows users:** [windows-shell](https://github.com/nicoforclaude/claude-windows-shell) plugin for proper shell command handling
-
-### Quick Installation
-
-**Step 1: Add the marketplace**
-```shell
-/plugin marketplace add https://github.com/nicoforclaude/claude-smart-git
-```
-
-**Step 2: Install the plugin**
-```shell
-/plugin install git@claude-smart-git
-```
-
-Or browse and install interactively:
-```shell
-/plugin
-```
-
-### Verification
-
-Check the plugin is installed:
-```shell
-/plugin list
-```
-
-### Upgrading from v0.1.0
-
-If you previously installed components directly, remove them first:
-```shell
-/plugin uninstall git
-```
-
-Then follow the installation steps above.
 
 ## Usage
 
