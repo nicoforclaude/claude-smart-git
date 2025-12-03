@@ -31,7 +31,7 @@ You should say either:
 - Bad: "claude commands" (too broad)
 - Good: "commit workflow refactor" (specific)
 - Bad: "documentation updates" (too broad)
-- Good: "senior-editor brevity metrics" (specific)
+- Good: "editor brevity metrics" (specific)
 - If changes span multiple specific topics, list them: "commit workflow, linter setup"
 - Avoid generic terms when specific ones exist
 
