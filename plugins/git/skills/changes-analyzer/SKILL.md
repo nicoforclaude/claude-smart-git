@@ -65,6 +65,38 @@ Scan diff content for quality signals:
 - `*.log`, `*.bak`, `*.backup` files
 - IDE/editor folders: `.idea/`, `.vscode/settings.json`, `*.code-workspace`
 
+**🚫 Build Artifacts (TypeScript)** - Compiled output that shouldn't be versioned:
+
+Detection (requires tsconfig.json):
+```
+For each .js file in changes (tracked OR untracked):
+├── inside outDir? ──→ 🚫 ARTIFACT
+└── sibling .ts exists? ──→ 🚫 ARTIFACT
+```
+
+Actions:
+| State     | Action                              |
+|-----------|-------------------------------------|
+| Tracked   | `git rm --cached <file>` + delete   |
+| Untracked | Delete                              |
+
+If artifacts found in outDir → also suggest adding outDir to `.gitignore`
+
+Example output:
+```
+### 🚫 Build Artifacts (5 files)
+
+Compiled .js with existing .ts sources:
+- src/utils/helper.js ← helper.ts exists
+- src/index.js ← index.ts exists
+
+In outDir (dist/):
+- dist/main.js, dist/utils.js (3 files)
+
+**Action:** Delete these files (tracked: untrack first)
+**Prevention:** Add `dist/` to .gitignore
+```
+
 ### 3. Grouping Into Commits
 
 **Prioritize topic grouping over file type:**
