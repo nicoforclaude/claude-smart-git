@@ -1,6 +1,6 @@
 ---
 description: "Commit your work with linting, smart analysis, and commit message generation"
-argument-hint: ""
+argument-hint: "[session]"
 allowed-tools: Task(subagent_type:linter-agent), Task(subagent_type:git:changes-analyzer-agent), Bash, AskUserQuestion, Skill(windows-shell:windows-shell)
 ---
 
@@ -24,6 +24,31 @@ You are **commit-orchestrator**. Your job is to orchestrate the commit process b
 - This ensures proper path quoting and command handling for all git operations
 - Skip this step on non-Windows platforms
 
+### Step 1.5: Session Mode Detection (Conditional)
+
+**Check if `session` argument was provided:**
+
+If the command was invoked as `/git:commit session`:
+
+1. **Introspect your conversation context** to identify files YOU modified during this session:
+   - Files you edited via Edit tool
+   - Files you wrote via Write tool
+   - Files you created/modified via Bash commands (touch, echo >, cp, mv, etc.)
+
+2. **Build session file list**:
+   - Collect all file paths from your tool uses in this conversation
+   - Normalize paths to absolute paths
+   - Deduplicate the list
+
+3. **Early exit if no session files**:
+   - If you didn't modify any files in this session, report:
+     "No files were modified during this Claude Code session. Nothing to commit."
+   - Exit the command
+
+4. **Store session context** for passing to the changes-analyzer-agent in Step 3
+
+**If no `session` argument provided:** Continue with standard flow (analyze all git changes).
+
 ### Step 2: Run Linter (Conditional)
 
 **Check if linting is configured in the project:**
@@ -33,10 +58,20 @@ You are **commit-orchestrator**. Your job is to orchestrate the commit process b
 
 **If linting is configured**, use the Task tool to launch the **linter-agent**:
 
+**Standard mode (no `session` argument):**
 ```
 Task(
   subagent_type: "linter-agent",
   prompt: "Run ESLint on changed files (staged + unstaged). Fix safe issues automatically. Block if errors remain.",
+  model: "haiku"
+)
+```
+
+**Session mode (`session` argument provided):**
+```
+Task(
+  subagent_type: "linter-agent",
+  prompt: "Run ESLint ONLY on these session files: [list session files here]. Do NOT lint other changed files - they may have work in progress. Fix safe issues automatically. Block if errors remain in session files.",
   model: "haiku"
 )
 ```
@@ -47,10 +82,20 @@ Task(
 
 Once linting passes, use the Task tool to launch the **changes-analyzer-agent**:
 
+**Standard mode (no `session` argument):**
 ```
 Task(
   subagent_type: "git:changes-analyzer-agent",
   prompt: "Analyze current git changes and recommend commit strategy. Return structured analysis with files, messages, and reasoning. IMPORTANT: By default, include meaningful untracked files (documentation, configuration, source code, etc.) in commit recommendations.",
+  model: "haiku"
+)
+```
+
+**Session mode (`session` argument provided):**
+```
+Task(
+  subagent_type: "git:changes-analyzer-agent",
+  prompt: "Analyze git changes for SESSION-SCOPED COMMIT. Only consider these files modified during this Claude Code session: [list session files here]. Exclude ALL other files from analysis, even if they appear in git status. Return structured analysis only for the session files that have git changes. If a session file has no git changes (clean), note it separately.",
   model: "haiku"
 )
 ```
@@ -70,6 +115,7 @@ Then re-analyze.
 
 Parse the agent's structured output and show a clear summary to the user:
 
+**Standard mode:**
 ```
 📋 Commit Preview:
 
@@ -85,6 +131,26 @@ Commit message:
   [Optional body]"
 
 [If multiple commits, show each one numbered]
+```
+
+**Session mode:**
+```
+📋 Commit Preview (Session-scoped):
+
+Session files: N files modified in this conversation
+
+Files to commit:
+  • path/to/file1.ts
+  • path/to/file2.md
+
+[If some session files have no git changes:]
+⚠️ Session files with no git changes (skipped):
+  • path/to/clean-file.ts
+
+Commit message:
+  "[First line of commit message]
+
+  [Optional body]"
 ```
 
 **STOP HERE.** Do not proceed further. Do not say "go ahead" or suggest next steps.
@@ -158,6 +224,8 @@ Do not add mentions of AI used (Claude, other) in this work, it's just a tool, n
 
 **If user selects "Split into multiple commits"** (single commit only):
 1. Re-invoke changes-analyzer-agent with explicit instruction to split changes:
+
+**Standard mode:**
 ```
 Task(
   subagent_type: "git:changes-analyzer-agent",
@@ -165,6 +233,16 @@ Task(
   model: "haiku"
 )
 ```
+
+**Session mode:**
+```
+Task(
+  subagent_type: "git:changes-analyzer-agent",
+  prompt: "Re-analyze and SPLIT into multiple logical commits. ONLY consider these session files: [list session files here]. Focus on separating concerns within session files. Return multiple commits with files and messages for each. Do NOT execute any commits.",
+  model: "haiku"
+)
+```
+
 2. Show the new multi-commit preview
 3. Ask user to proceed with the new strategy (showing "Commit all", "Select specific commits", "Show full diff", "Cancel" options)
 
@@ -193,83 +271,95 @@ Options:
 
 ```
 ┌─────────────────────────────────────┐
-│  /commit invoked                    │
+│  /commit [session] invoked          │
 └────────────────┬────────────────────┘
                  │
                  ▼
 ┌─────────────────────────────────────┐
-│  Check for linting setup            │
+│  Step 1: Load Windows skill         │
+│  (Windows only)                     │
+└────────────────┬────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────┐
+│  Step 1.5: Session mode detection   │
+│  • Check if `session` arg provided  │
+└────────────────┬────────────────────┘
+                 │
+    ┌────────────┴────────────┐
+    │                         │
+    ▼ [session]               ▼ [no arg]
+┌───────────────────┐    ┌───────────────────┐
+│ Introspect conv.  │    │ Standard mode     │
+│ Build file list   │    │ (all git changes) │
+│ from Edit/Write/  │    └─────────┬─────────┘
+│ Bash tool uses    │              │
+└─────────┬─────────┘              │
+          │                        │
+          ├─[no files]──► Exit     │
+          │                        │
+          ▼ [has files]            │
+    ┌─────┴────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────┐
+│  Step 2: Check for linting setup    │
 │  • Check project CLAUDE.md          │
 │  • Look for ESLint config           │
 └────────────────┬────────────────────┘
                  │
-                 ├─[no linting]──► Skip to analysis
+                 ├─[no linting]──► Skip to Step 3
                  │
-                 ├─[has linting]─► Launch linter-agent
-                 │
-                 ▼
+                 ▼ [has linting]
 ┌─────────────────────────────────────┐
 │  Launch linter-agent (haiku)        │
-│  • Run ESLint on changed files      │
+│  • Session: lint session files ONLY │
+│  • Standard: lint all changed files │
 │  • Auto-fix safe issues             │
-│  • Report errors if any             │
 └────────────────┬────────────────────┘
                  │
                  ├─[errors]──► BLOCK & Report
                  │
-                 ├─[success]─► Continue
-                 │
-                 ▼
+                 ▼ [success]
 ┌─────────────────────────────────────┐
-│  Launch changes-analyzer-agent      │
-│  • Analyze changes                  │
+│  Step 3: Launch changes-analyzer    │
+│  • Session: analyze session files   │
+│  • Standard: analyze all changes    │
 │  • Return structured recommendation │
 └────────────────┬────────────────────┘
                  │
                  ▼
 ┌─────────────────────────────────────┐
-│  Orchestrator shows clear summary   │
-│  • Parse skill output               │
+│  Step 4: Show summary to user       │
+│  • Session: "(Session-scoped)"      │
 │  • Display files, message, strategy │
 │  • Warn if .gitignore in changes    │
 │  • Ask user for confirmation        │
 └────────────────┬────────────────────┘
                  │
-                 ├─[Commit and push]──► Execute git commands
-                 │                      git push
-                 │                      Report success
-                 │
-                 ├─[Commit only]──► Execute git commands
-                 │                  Report success (no push)
-                 │
-                 ├─[Split commits]──► Re-invoke skill with
-                 │                    split instruction
-                 │                    Show new preview
-                 │                    Ask for confirmation
-                 │
-                 ├─[Select specific]──► Ask which commits
-                 │                      Execute selected only
-                 │                      Report success
-                 │
-                 ├─[Show diff]──► Display diff
-                 │                Ask again
-                 │
-                 └─[No/Cancel]──► Cancel, report
+                 ├─[Commit and push]──► Execute & push
+                 ├─[Commit only]──► Execute (no push)
+                 ├─[Split commits]──► Re-analyze & ask
+                 ├─[Select specific]──► Pick commits
+                 ├─[Show diff]──► Display & ask again
+                 └─[Cancel]──► Exit
 ```
 
 ## Your Role as Orchestrator
 
 You are the coordinator AND executor. Your job is to:
 
-1. **Check for linting setup** - check project CLAUDE.md, skip if not configured
-2. **Launch linter-agent** (if applicable) with clear instructions
-3. **Parse linter-agent response** - block if it failed
-4. **Launch changes-analyzer-agent** to analyze changes
-5. **Parse agent's structured output** - extract files, messages, strategy
-6. **Show clear summary** to user (not hidden in collapsed tools)
-7. **STOP and ASK user** using AskUserQuestion (with .gitignore warning if needed)
-8. **Execute git commands** ONLY after user chooses an action
-9. **Report results** clearly
+1. **Load Windows skill** (Windows only) - ensure proper path handling
+2. **Detect session mode** - if `session` arg, introspect conversation for files modified via Edit/Write/Bash
+3. **Check for linting setup** - check project CLAUDE.md, skip if not configured
+4. **Launch linter-agent** (if applicable) - in session mode, lint only session files
+5. **Parse linter-agent response** - block if it failed
+6. **Launch changes-analyzer-agent** - in session mode, analyze only session files
+7. **Parse agent's structured output** - extract files, messages, strategy
+8. **Show clear summary** to user (not hidden in collapsed tools)
+9. **STOP and ASK user** using AskUserQuestion (with .gitignore warning if needed)
+10. **Execute git commands** ONLY after user chooses an action
+11. **Report results** clearly
 
 ## Important Notes
 
