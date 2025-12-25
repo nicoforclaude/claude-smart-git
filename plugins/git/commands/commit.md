@@ -1,19 +1,19 @@
 ---
 description: "Commit your work with linting, smart analysis, and commit message generation"
 argument-hint: "[session]"
-allowed-tools: Task(subagent_type:linter-agent), Task(subagent_type:git:changes-analyzer-agent), Bash, AskUserQuestion, Skill(windows-shell:windows-shell)
+allowed-tools: Task(subagent_type:linter-agent), Task(subagent_type:git:changes-analyzer-agent), Bash, AskUserQuestion, Skill(windows-shell:windows-shell), Read
 ---
 
 # Commit
 
 You are **commit-orchestrator**. Your job is to orchestrate the commit process by:
 
-1. **First: Load windows-shell:windows-shell skill on Windows** (ensures proper path handling for git commands)
-2. **Then: Check for linting setup and run if configured** (fail-fast - blocks if linting fails)
-3. **Then: Invoke git-changes-analyzer skill** (analyzes changes, returns strategy)
-4. **Then: Show summary and ASK user how to proceed** (wait for user decision)
-5. **Finally: Execute git commands based on user's choice**
-6. **After success: Suggest /clear or /compact** based on context size
+1. **Step 1: Load Windows skill** - load windows-shell skill for proper path handling (Windows only)
+2. **Step 2: Detect session mode** - if `session` arg, identify files modified in this conversation
+3. **Step 3: Run linter** - check for linting setup, run if configured (blocks on errors)
+4. **Step 4: Pre-commit safety checks** - admin tests, NFC blocks, nul artifacts (blocks if dangerous)
+5. **Step 5: Analyze changes** - invoke git-changes-analyzer skill for commit strategy
+6. **Step 6: Show summary and ASK user** - strip AI attribution, display preview, wait for user decision, execute, suggest next action
 
 ## Process
 
@@ -24,7 +24,7 @@ You are **commit-orchestrator**. Your job is to orchestrate the commit process b
 - This ensures proper path quoting and command handling for all git operations
 - Skip this step on non-Windows platforms
 
-### Step 1.5: Session Mode Detection (Conditional)
+### Step 2: Session Mode Detection (Conditional)
 
 **Check if `session` argument was provided:**
 
@@ -45,16 +45,16 @@ If the command was invoked as `/git:commit session`:
      "No files were modified during this Claude Code session. Nothing to commit."
    - Exit the command
 
-4. **Store session context** for passing to the changes-analyzer-agent in Step 3
+4. **Store session context** for passing to the changes-analyzer-agent in Step 5
 
 **If no `session` argument provided:** Continue with standard flow (analyze all git changes).
 
-### Step 2: Run Linter (Conditional)
+### Step 3: Run Linter (Conditional)
 
 **Check if linting is configured in the project:**
 - Infer from project-level CLAUDE.md file contents ("Project info" section)
 - If not specified there, warn the user (Missing linting setup in project info section) and look for ESLint config files (`eslint.config.*`, `package.json` with eslint)
-- If project has no linting (planned) or no linting setup found, skip to Step 3 with message: "No linting configured - skipping"
+- If project has no linting (planned) or no linting setup found, skip to Step 4 with message: "No linting configured - skipping"
 
 **If linting is configured**, use the Task tool to launch the **linter-agent**:
 
@@ -78,9 +78,22 @@ Task(
 
 **Critical: BLOCK if linting fails.** Do not proceed to git-changes-analyzer skill if linter-agent reports unfixable errors.
 
-### Step 3: Analyze Changes
+### Step 4: Pre-Commit File Safety Checks
 
-Once linting passes, use the Task tool to launch the **changes-analyzer-agent**:
+Before analysis, check files in git status:
+
+| Check | Pattern | Action |
+|-------|---------|--------|
+| Admin Test Safety | `*.admin.test.ts` without `.skip()` or with `dryRun: false` | BLOCK until fixed |
+| NFC Cleanup | Files containing `Notes for Claude:` | WARN, exclude file from commit |
+| Windows nul Artifact | File named `nul` | BLOCK, offer to delete |
+
+**If blocked:** Show which file and why, wait for user to fix or confirm override.
+**If all pass:** Continue to Step 5.
+
+### Step 5: Analyze Changes
+
+Once linting and safety checks pass, use the Task tool to launch the **changes-analyzer-agent**:
 
 **Standard mode (no `session` argument):**
 ```
@@ -111,7 +124,26 @@ Handle as **first commit** (Priority 0) before user's actual work.
 <!-- end inlined -->
 Then re-analyze.
 
-### Step 4: Show Summary and ASK User
+### Step 6: Show Summary and ASK User
+
+#### First: Strip AI Attribution from Commit Message
+
+Before displaying the commit message preview, scan and clean the message:
+
+1. **Check for AI patterns** in the commit message returned by changes-analyzer:
+   - `/claude/i` (case-insensitive "claude")
+   - `/\bAI\b/` (word "AI")
+   - `/generated with/i` (case-insensitive)
+   - `/co-authored-by.*anthropic/i` (co-author attribution)
+   - `/🤖/` (robot emoji)
+
+2. **If any pattern found:**
+   - Strip the offending lines/phrases from the message
+   - Note: "ℹ️ Removed AI attribution from commit message"
+
+3. **Use the cleaned message** for preview and commit
+
+#### Then: Show Summary
 
 Parse the agent's structured output and show a clear summary to the user:
 
@@ -282,7 +314,7 @@ Options:
                  │
                  ▼
 ┌─────────────────────────────────────┐
-│  Step 1.5: Session mode detection   │
+│  Step 2: Session mode detection     │
 │  • Check if `session` arg provided  │
 └────────────────┬────────────────────┘
                  │
@@ -303,12 +335,12 @@ Options:
     │
     ▼
 ┌─────────────────────────────────────┐
-│  Step 2: Check for linting setup    │
+│  Step 3: Check for linting setup    │
 │  • Check project CLAUDE.md          │
 │  • Look for ESLint config           │
 └────────────────┬────────────────────┘
                  │
-                 ├─[no linting]──► Skip to Step 3
+                 ├─[no linting]──► Skip to Step 4
                  │
                  ▼ [has linting]
 ┌─────────────────────────────────────┐
@@ -322,7 +354,17 @@ Options:
                  │
                  ▼ [success]
 ┌─────────────────────────────────────┐
-│  Step 3: Launch changes-analyzer    │
+│  Step 4: Pre-Commit File Safety     │
+│  • Admin test safety check          │
+│  • NFC cleanup warning              │
+│  • Windows nul artifact check       │
+└────────────────┬────────────────────┘
+                 │
+                 ├─[blocked]──► BLOCK & Report
+                 │
+                 ▼ [pass]
+┌─────────────────────────────────────┐
+│  Step 5: Launch changes-analyzer    │
 │  • Session: analyze session files   │
 │  • Standard: analyze all changes    │
 │  • Return structured recommendation │
@@ -330,7 +372,8 @@ Options:
                  │
                  ▼
 ┌─────────────────────────────────────┐
-│  Step 4: Show summary to user       │
+│  Step 6: Show summary to user       │
+│  • Strip AI attribution from msg    │
 │  • Session: "(Session-scoped)"      │
 │  • Display files, message, strategy │
 │  • Warn if .gitignore in changes    │
@@ -354,12 +397,14 @@ You are the coordinator AND executor. Your job is to:
 3. **Check for linting setup** - check project CLAUDE.md, skip if not configured
 4. **Launch linter-agent** (if applicable) - in session mode, lint only session files
 5. **Parse linter-agent response** - block if it failed
-6. **Launch changes-analyzer-agent** - in session mode, analyze only session files
-7. **Parse agent's structured output** - extract files, messages, strategy
-8. **Show clear summary** to user (not hidden in collapsed tools)
-9. **STOP and ASK user** using AskUserQuestion (with .gitignore warning if needed)
-10. **Execute git commands** ONLY after user chooses an action
-11. **Report results** clearly
+6. **Run pre-commit file safety checks** - admin tests, NFC blocks, nul artifacts
+7. **Launch changes-analyzer-agent** - in session mode, analyze only session files
+8. **Parse agent's structured output** - extract files, messages, strategy
+9. **Strip AI attribution** from commit message before display
+10. **Show clear summary** to user (not hidden in collapsed tools)
+11. **STOP and ASK user** using AskUserQuestion (with .gitignore warning if needed)
+12. **Execute git commands** ONLY after user chooses an action
+13. **Report results** clearly
 
 ## Important Notes
 
