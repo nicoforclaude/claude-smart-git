@@ -145,12 +145,15 @@ Before displaying the commit message preview, scan and clean the message:
 
 #### Then: Show Summary
 
+Run `git branch --show-current` to get the current branch name. Always show it in the preview.
+
 Parse the agent's structured output and show a clear summary to the user:
 
 **Standard mode:**
 ```
 📋 Commit Preview:
 
+Branch: {current-branch}
 Strategy: [Single/Multiple commits - reason]
 
 Files to be staged:
@@ -169,6 +172,7 @@ Commit message:
 ```
 📋 Commit Preview (Session-scoped):
 
+Branch: {current-branch}
 Session files: N files modified in this conversation
 
 Files to commit:
@@ -200,11 +204,33 @@ Options:
 
 After .gitignore confirmation (or if no .gitignore), use AskUserQuestion:
 
+#### Branch Guard: Check for Branch Convention
+
+Before showing options:
+
+1. Run `git branch --show-current` to get the current branch
+2. If on `main`, search for branch convention docs:
+   ```bash
+   git ls-files | grep -i "branch"
+   ```
+   Look for files matching `branch*.md` or `*branch-naming*` — same search as `git:branch:create`
+
+**If on `main` AND convention doc found → hard guard:**
+- Show: `⚠️ On \`main\` with branch convention in place. Push to main is blocked — use a feature branch and open a PR.`
+- **Remove all "...and push" options** from the question below
+- Only offer: "Commit only", "Show full diff", "Cancel"
+
+**If on `main` AND no convention doc → soft warning:**
+- Show: `⚠️ You are on \`main\`. Consider using a feature branch.`
+- Show all options, but **demote push** — make "Commit only" the first/default option, move "Commit and push" / "Commit all and push" last
+
+**If on any other branch:** show all options normally with push as default.
+
 **For single commit strategy:**
 ```
 Question: "Proceed with this commit?"
 Options:
-  - "Commit and push"           ← default/first option
+  - "Commit and push"           ← default/first option (omit if on main)
   - "Commit only"
   - "Split into multiple commits" (only show if: 2+ files AND agent could reasonably split them)
   - "Show full diff"
@@ -219,7 +245,7 @@ Note: Omit "Split into multiple commits" option if:
 ```
 Question: "How would you like to proceed?"
 Options:
-  - "Commit all and push"       ← default/first option
+  - "Commit all and push"       ← default/first option (omit if on main)
   - "Commit all (no push)"
   - "Select specific commits"
   - "Show full diff"
