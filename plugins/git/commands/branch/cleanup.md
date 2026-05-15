@@ -63,7 +63,19 @@ If this returns any commits — the branch is **not fully merged**. Stop and rep
 
 If empty — confirmed merged. Proceed.
 
-## Step 5 — Show plan and ask confirmation
+## Step 5 — Check for pending changes
+
+```bash
+git status --short
+```
+
+If there are any staged or unstaged changes — stop and report:
+
+> "⚠️ You have pending changes. Please commit or stash them before running cleanup."
+
+If working tree is clean — proceed.
+
+## Step 6 — Show plan and ask confirmation
 
 ```
 🗑️  Branch Cleanup Plan:
@@ -83,7 +95,7 @@ Use `AskUserQuestion`:
 - "Yes, delete it"
 - "Cancel"
 
-## Step 6 — Execute
+## Step 7 — Execute
 
 ```bash
 git checkout main

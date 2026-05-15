@@ -45,6 +45,9 @@ git log --oneline origin/main..HEAD
 git rev-list --count origin/main..HEAD
 ```
 
+Use the **behind count from Step 2** as `{N}` (commits integrated from origin/main).
+Use the `rev-list --count origin/main..HEAD` result as `{commits-ahead}` (your branch's own commits).
+
 Report:
 
 ```
