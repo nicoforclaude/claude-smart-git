@@ -18,7 +18,7 @@ Run these in parallel:
 ```bash
 # Fetch and list merged branches
 git fetch origin --prune --quiet
-git branch --merged origin/main | grep -v "^\*" | grep -v "^\s*main$" | grep -v "^\s*master$"
+git branch --merged origin/main | grep -v "^\*" | grep -v "^[[:space:]]*main$" | grep -v "^[[:space:]]*master$"
 ```
 
 ```bash

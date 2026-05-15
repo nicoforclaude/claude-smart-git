@@ -42,6 +42,7 @@ If conflicts occur — report which files conflict and stop. Let user resolve ma
 
 ```bash
 git log --oneline origin/main..HEAD
+git rev-list --count origin/main..HEAD
 ```
 
 Report:
