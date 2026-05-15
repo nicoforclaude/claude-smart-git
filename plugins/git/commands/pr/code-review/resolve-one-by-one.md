@@ -29,18 +29,18 @@ REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
 Fetch review-level comments (top-level review bodies):
 
 ```bash
-gh api repos/$REPO/pulls/$PR/reviews --jq '[.[] | select(.body != "") | {id, state, body, user: .user.login, submitted_at}]'
+gh api --paginate repos/$REPO/pulls/$PR/reviews --jq '[.[] | select(.body != "") | {id, state, body, user: .user.login, submitted_at}]'
 ```
 
-Fetch inline comments (line-level):
+Fetch inline comments (line-level), including thread linkage fields:
 
 ```bash
-gh api repos/$REPO/pulls/$PR/comments --jq '[.[] | {id, path, line, body, user: .user.login}]'
+gh api --paginate repos/$REPO/pulls/$PR/comments --jq '[.[] | {id, in_reply_to_id, pull_request_review_id, path, line, body, user: .user.login}]'
 ```
 
 ## Step 4 — Build the issue list
 
-Combine both sources into a unified list. Deduplicate follow-up threads (keep the root comment, note reply count).
+Combine both sources into a unified list. Group inline comments into threads using `in_reply_to_id` — comments with a non-null `in_reply_to_id` are replies; keep the root comment (where `in_reply_to_id` is null) and note the reply count.
 
 Categorize each issue:
 

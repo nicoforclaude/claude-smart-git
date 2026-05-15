@@ -104,8 +104,12 @@ Use `AskUserQuestion`:
 
 ## Step 7 — Create
 
+Write the body to a temp file first to safely handle multi-line markdown and any special characters:
+
 ```bash
-gh pr create --title "{title}" --body "{body}" --base main
+gh pr create --title "{title}" --body-file - --base main <<'BODY'
+{body}
+BODY
 ```
 
 Report the PR URL.

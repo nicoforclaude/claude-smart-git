@@ -45,21 +45,31 @@ If no ci-map either — ask: "Which CI check do you want to fix? (type the check
 
 ## Step 4 — Fetch failing CI logs
 
+First, fetch the check entry including its status and conclusion:
+
 ```bash
 PR=$(gh pr view --json number --jq '.number')
-RUN_ID=$(gh pr checks $PR --json name,link --jq '.[] | select(.name=="{check-name}") | .link | split("/runs/")[1] | split("/")[0]')
-gh run view $RUN_ID --log-failed
+gh pr checks $PR --json name,status,conclusion,link --jq '.[] | select(.name=="{check-name}")'
 ```
 
-If the check is currently passing — report: "`{check-name}` is passing. Nothing to fix." and stop.
-
-If `RUN_ID` is empty — the check name wasn't found in the PR checks. Show available check names:
+**If no entry returned** — the check name wasn't found. Show available names and stop:
 
 ```bash
 gh pr checks $PR --json name --jq '.[].name'
 ```
 
-Stop and report: "Check `{check-name}` not found. Available checks: {list}"
+> "Check `{check-name}` not found. Available checks: {list}"
+
+**If `conclusion` is `"success"`** — report: "`{check-name}` is passing. Nothing to fix." and stop.
+
+**If `link` is empty or null** — report: "Run link not available yet (check may still be queued)." and stop.
+
+**Otherwise** — extract the run ID from the link and fetch the failed log:
+
+```bash
+RUN_ID=$(gh pr checks $PR --json name,link --jq '.[] | select(.name=="{check-name}") | .link | split("/runs/")[1] | split("/")[0]')
+gh run view $RUN_ID --log-failed
+```
 
 Read the log output carefully to understand what is failing before proceeding.
 
