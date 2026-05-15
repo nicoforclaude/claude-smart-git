@@ -1,36 +1,55 @@
 ---
-description: "Delete a fully merged branch locally and remotely"
-argument-hint: "[branch-name] (omit to pick from list)"
+description: "Delete the current branch once fully merged into main — lands on main when done"
+argument-hint: "[branch-name] (omit to use current branch)"
 allowed-tools: Bash, AskUserQuestion, Skill(windows-shell:windows-shell)
 ---
 
 # Git: Branch Cleanup
 
-Delete a fully merged branch — locally and from remote. Refuses to delete unmerged branches.
+Delete the current branch (or a named branch) after it has been fully merged into main. Refuses unmerged branches and protected branches. Lands on main when done.
 
 ## Step 1 — Load Windows Shell Skill (Windows Only)
 
 If running on Windows, load `windows-shell:windows-shell` skill.
 
-## Step 2 — Fetch and identify target branch
+## Step 2 — Read state (parallel)
+
+Run these in parallel:
 
 ```bash
+# Current branch + remote state
+git branch --show-current
 git fetch origin --prune --quiet
 ```
 
-**If `$ARGUMENTS` provided** — use that as the target branch name, skip the picker.
-
-**If no argument** — list candidates (local branches already merged into main):
-
 ```bash
-git branch --merged origin/main | grep -v "^\*" | grep -v "main"
+# Branch convention doc (same search as branch:create)
+find . -maxdepth 4 -name "branch*.md" -o -name "*branch-naming*" -o -name "*conventions*" 2>/dev/null | grep -v ".git/"
 ```
 
-If the list is empty, report: "No fully merged local branches found. Nothing to clean up." and stop.
+If a convention doc is found, read it and extract any protected branch patterns.
 
-If there are candidates, use `AskUserQuestion` to let the user pick which branch to delete.
+Default protected patterns (always applied, regardless of convention doc):
 
-## Step 3 — Verify the branch is fully merged
+- `deploy/*`
+- `release/*`
+- `staging`
+- `production`
+- `main`
+- `master`
+- `develop`
+
+## Step 3 — Determine target branch
+
+**If `$ARGUMENTS` provided** — use that as the target branch.
+
+**If no argument** — use the current branch from Step 2.
+
+If the target matches a **protected pattern** — stop and report:
+
+> "⛔ Branch `{branch}` matches a protected pattern (`{pattern}`). Cleanup skipped."
+
+## Step 4 — Verify the branch is fully merged
 
 ```bash
 git log origin/main..{branch} --oneline
@@ -38,11 +57,13 @@ git log origin/main..{branch} --oneline
 
 If this returns any commits — the branch is **not fully merged**. Stop and report:
 
-> "⚠️ Branch `{branch}` has N commit(s) not yet in main. Cleanup refused to prevent data loss."
+> "⚠️ Branch `{branch}` has N unmerged commit(s). Not ready for cleanup."
+>
+> "Tip: run `/git:branch:cleanup:scan` to find branches that are already merged and ready to go."
 
 If empty — confirmed merged. Proceed.
 
-## Step 4 — Show plan and ask confirmation
+## Step 5 — Show plan and ask confirmation
 
 ```
 🗑️  Branch Cleanup Plan:
@@ -62,7 +83,7 @@ Use `AskUserQuestion`:
 - "Yes, delete it"
 - "Cancel"
 
-## Step 5 — Execute
+## Step 6 — Execute
 
 ```bash
 git checkout main
@@ -71,6 +92,8 @@ git branch -d {branch}
 git push origin --delete {branch}
 ```
 
-Report each step as it completes. If remote delete fails (already deleted), note it and continue — not an error.
+Report each step as it completes. If remote delete fails (already deleted remotely), note it and continue — not an error.
 
-Final report: "Branch `{branch}` deleted locally and from remote."
+Final report:
+
+> "Branch `{branch}` deleted locally and from remote. Now on `main`. ✅"
