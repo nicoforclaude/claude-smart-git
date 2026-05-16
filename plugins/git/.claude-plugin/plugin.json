@@ -1,7 +1,7 @@
 {
   "name": "git",
   "description": "Smart git workflow with commit analysis, atomic commit recommendations, and automated workflow",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "author": {
     "name": "Nico"
   }

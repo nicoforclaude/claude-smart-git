@@ -1,6 +1,6 @@
 ---
 description: "Create a PR — infers title and body from session context, commits, and planning docs"
-allowed-tools: Bash, AskUserQuestion, Skill(windows-shell:windows-shell)
+allowed-tools: Bash, AskUserQuestion, Skill(windows-shell:windows-shell), Skill(git:commit), Skill(git:commit:fast)
 ---
 
 # PR: Create
@@ -29,7 +29,16 @@ If on `main` — stop: "Cannot create a PR from `main`. Switch to a feature bran
 
 If no commits ahead of main — stop: "No commits ahead of main. Nothing to PR."
 
-If there are uncommitted changes — warn: "⚠️ You have uncommitted changes — they will not be included in the PR."
+If there are uncommitted changes — use `AskUserQuestion`:
+- Question: "⚠️ You have uncommitted changes. Commit before creating the PR?"
+- "Commit (full)" — linting, change analysis, multi-commit support
+- "Commit (fast)" — no linting or analysis; best for small, obvious changes
+- "Skip" — continue without committing (changes will not be in the PR)
+- "Cancel"
+
+If "Commit (full)": invoke `Skill(git:commit)`, then continue from Step 3.
+If "Commit (fast)": invoke `Skill(git:commit:fast)`, then continue from Step 3.
+If "Cancel": stop.
 
 If planning docs found — read any that appear relevant to this branch's work (match by topic/name against branch name and commit subjects).
 
