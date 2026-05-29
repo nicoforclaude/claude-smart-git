@@ -33,6 +33,11 @@ find . -maxdepth 4 -name "branch*.md" -o -name "*branch-naming*" -o -name "*conv
 git branch --list "*/working-*"
 ```
 
+```bash
+# Current worktree directory name (for working-branch inference)
+basename "$(pwd)"
+```
+
 If a convention doc is found:
 - Read it and extract any protected branch patterns.
 - Extract the **owner prefix** for the current user by matching `git config user.email` against the owner table in the doc (e.g. `kolyaevdokimov@gmail.com` → `nico`).
@@ -89,7 +94,9 @@ If working tree is clean — proceed.
 
 Determine the **landing branch**:
 - If `main` is available (not checked out in another worktree) → land on `main`
-- Otherwise → land on a `{owner-prefix}/working-*` branch for the **current user** (resolved in Step 2); ask user to pick if multiple exist
+- Otherwise → land on a `{owner-prefix}/working-*` branch for the **current user** (resolved in Step 2):
+  - If exactly one match → use it automatically
+  - If multiple → infer from the worktree directory suffix (e.g., `tsmain-2` → `working-2`); ask user only if no match
 
 ```
 🗑️  Branch Cleanup Plan:
@@ -135,7 +142,10 @@ If owner prefix could not be resolved (no convention doc) — stop and report:
 > "⚠️ `main` is checked out in another worktree. Cannot resolve owner prefix (no branch naming convention doc found). Please switch manually."
 
 If exactly one `{owner-prefix}/working-*` branch exists — use it automatically.
-If multiple exist — ask user to pick via `AskUserQuestion`.
+If multiple exist — infer the working slot from the worktree directory name:
+- Extract the numeric suffix from the directory name (e.g., `tsmain-2` → `2`)
+- If `{owner-prefix}/working-{n}` exists in the list — use it automatically
+- If no match — ask user to pick via `AskUserQuestion`
 If none exist — stop and report:
 
 > "⚠️ `main` is checked out in another worktree and no `{owner-prefix}/working-*` branch found. Please switch manually."
