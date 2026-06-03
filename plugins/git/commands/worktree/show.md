@@ -21,12 +21,13 @@ git worktree list
 
 ## Step 3 — Check each worktree
 
-For each worktree path from Step 2, run:
+For each worktree path from Step 2, run in parallel:
 
 ```bash
 git -C {worktree-path} branch --show-current
 git -C {worktree-path} status --short
-git -C {worktree-path} log origin/main..HEAD --oneline 2>/dev/null
+git -C {worktree-path} rev-list --count origin/main..HEAD 2>/dev/null
+git -C {worktree-path} rev-list --count HEAD..origin/main 2>/dev/null
 ```
 
 ## Step 4 — Report
@@ -34,17 +35,15 @@ git -C {worktree-path} log origin/main..HEAD --oneline 2>/dev/null
 Present a table:
 
 ```
-Worktrees:
-
-  📁 /path/to/worktree  (main worktree)
-     Branch:   main
-     Changes:  clean
-     Ahead:    —
-
-  📁 /path/to/worktree2
-     Branch:   nico/feature/something
-     Changes:  3 files modified, 1 untracked
-     Ahead:    2 commits
+┌──────────────────┬───────────────────────┬─────────────────┬───────┬────────┐
+│ Worktree         │ Branch                │ Changes         │ Ahead │ Behind │
+├──────────────────┼───────────────────────┼─────────────────┼───────┼────────┤
+│ main ← current   │ main                  │ clean           │  —    │  —     │
+│ auth             │ nico/feature/auth     │ 3 modified      │  2    │  —     │
+│ hotfix           │ nico/hotfix/login     │ clean           │  —    │ 🔴 1   │
+└──────────────────┴───────────────────────┴─────────────────┴───────┴────────┘
 ```
 
-Mark the current worktree with `← current`.
+- Mark the current worktree with `← current`
+- Show `—` when ahead or behind count is 0
+- Prefix behind count with 🔴 when non-zero
