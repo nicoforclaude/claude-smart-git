@@ -1,176 +1,98 @@
 # Claude Smart Git
 
-Intelligent git workflow tools for Claude Code with smart commit analysis and recommendations.
+> A Claude Code plugin that gives you a complete, intelligent git workflow — from smart commit analysis to PR management and worktree coordination.
 
-## Overview
+Stop thinking about git mechanics. `/commit` analyzes your changes, groups them logically, lints, generates a meaningful message, and handles hooks. The rest of the 18 commands cover branches, PRs, worktrees, and daily sync — all driven by Claude.
 
-`claude-smart-git` provides intelligent git workflow automation for Claude Code, featuring smart commit analysis, readiness assessment, and automated commit message generation.
+---
 
 ## Installation
 
-### Prerequisites
-- Claude Code CLI with plugin support
-- **Windows users:** [windows-shell](https://github.com/nicoforclaude/claude-windows-shell) plugin for proper shell command handling
+**Prerequisites:** Claude Code CLI with plugin support. Windows users also need the [windows-shell](https://github.com/nicoforclaude/claude-windows-shell) plugin.
 
-### Quick Installation
-
-**Step 1: Add the marketplace**
 ```shell
+# Add the marketplace
 /plugin marketplace add https://github.com/nicoforclaude/claude-smart-git
-```
 
-**Step 2: Install the plugin**
-```shell
+# Install the plugin
 /plugin install git@claude-smart-git
 ```
 
-Or browse and install interactively:
-```shell
-/plugin
-```
-
-### Verification
-
-Check the plugin is installed:
-```shell
-/plugin list
-```
+Verify: `/plugin list`
 
 ### Upgrading from v0.1.0
 
-If you previously installed components directly, remove them first:
 ```shell
 /plugin uninstall git
+# then reinstall above
 ```
 
-Then follow the installation steps above.
+---
 
-## What's Included
+## Commands
 
-### Skills (1)
+### Commits
 
-#### **changes-analyzer**
-- Analyzes git changes with readiness indicators (✅/🚧/⚠️/🗑️)
-- Recommends atomic commit strategies
-- Auto-triggers when analyzing or creating commits
+| Command | What it does |
+|---------|-------------|
+| `/git:commit` | Full smart commit — linting, change analysis, AI message generation, hook handling |
+| `/git:commit:fast` | Quick commit — skips linting and analysis, straight to message and commit |
 
-### Agents (1)
+### Daily Flow
 
-#### **changes-analyzer-agent**
-- Autonomous analysis of git changes
-- Multi-commit workflow recommendations
-- Working tree review and startup checks
-- Provides structured commit recommendations
+| Command | What it does |
+|---------|-------------|
+| `/git:startup` | Git status check at session start — branch, staged, unstaged, untracked |
+| `/git:status` | Current branch and change overview |
+| `/git:pull-main` | Fetch and merge `origin/main` into current branch |
+| `/git:push` | Push commits to remote |
+| `/git:sync` | Diagnose and sync branches downstream (deploy → main → working) |
+| `/git:to-main` | Switch to main with safety check for pending changes |
 
-### Commands (5)
+### Branches
 
-#### **/commit** (frequently used)
-- Smart commit workflow with automated analysis
-- Linting integration
-- AI-generated commit messages
-- Pre-commit hook handling
+| Command | What it does |
+|---------|-------------|
+| `/git:branch:create` | Smart branch creation — infers naming convention and topic from session |
+| `/git:branch:cleanup` | Delete current branch once merged — lands on main or working branch |
+| `/git:branch:cleanup:scan` | Scan for merged branches, multi-select bulk cleanup |
 
-#### **/git** (menu)
-- Interactive menu for git commands
-- Quick access to status, catchup, and startup
+### Pull Requests
 
-#### **/git:status**
-- Show current branch
-- Check for pending changes
-- Quick status overview
+| Command | What it does |
+|---------|-------------|
+| `/git:pr:create` | Create PR — infers title and body from session context and commits |
+| `/git:pr:fix-ci` | Fetch failing CI logs, reproduce locally, fix and verify (no commit) |
+| `/git:pr:code-review:resolve-one-by-one` | Read PR comments, triage by severity, fix one at a time |
+| `/git:pr:code-review:cleanup:all` | Delete all bot review comments and dismiss all human reviews |
+| `/git:pr:code-review:cleanup:keep-last` | Delete all bot comments except latest round, dismiss older reviews |
 
-#### **/git:catchup**
-- Merge dev-preview into main branch
-- Automated branch synchronization
+### Worktrees
 
-#### **/git:startup**
-- Quick git status check at session start
-- Ensures clean working tree awareness
+| Command | What it does |
+|---------|-------------|
+| `/git:worktree:show` | List all worktrees with branch and pending changes status |
+| `/git:worktree:pull-main` | Fetch `origin/main` and fast-forward all clean worktrees |
 
-## Usage
+---
 
-### Automatic Activation
+## Smart Commit Analysis
 
-The `changes-analyzer` skill activates automatically:
-- When analyzing commits
-- Before creating commits
-- During git workflow operations
+The `changes-analyzer` skill (auto-triggered by `/git:commit`) evaluates every file before it touches `git commit`:
 
-### Manual Activation
+| Indicator | Meaning |
+|-----------|---------|
+| ✅ Ready | Changes are coherent and self-contained |
+| 🚧 In Progress | Work is incomplete or mixed concerns |
+| ⚠️ Needs Review | Suspicious patterns detected |
+| 🗑️ Cleanup | Temporary or debug code present |
+| 🚫 Do Not Commit | Secrets, breaking changes, or unsafe content |
 
-Use the `Skill` tool to manually activate:
+When changes span multiple logical concerns, it recommends atomic commit groupings — separating features from fixes, refactoring from functionality — before you commit anything.
 
-```
-Skill(skill: "git:changes-analyzer")
-```
-
-### Using Commands
-
-```bash
-# Commit with smart analysis (most frequently used)
-/commit
-
-# Open git commands menu
-/git
-
-# Or use specific git commands directly
-/git:status
-/git:catchup
-/git:startup
-```
-
-### Using Agents
-
-Launch the agent with the `Task` tool:
-
-```
-Task(subagent_type: "git:changes-analyzer-agent", prompt: "Analyze current changes")
-```
-
-## Features
-
-### Smart Commit Analysis
-
-The changes-analyzer provides:
-- **✅ Ready**: Changes are coherent and ready to commit
-- **🚧 In Progress**: Work is incomplete or mixed
-- **⚠️ Needs Review**: Suspicious patterns detected
-- **🗑️ Cleanup**: Temporary or debug code present
-
-### Atomic Commit Recommendations
-
-Analyzes working tree and suggests logical commit groupings:
-- Separate features from fixes
-- Isolate refactoring from functionality
-- Group related changes together
-
-### Intelligent Commit Messages
-
-Automatically generates:
-- Conventional commit format
-- Contextual descriptions
-- Focused on "why" not just "what"
-
-## Philosophy
-
-1. **Atomic commits** - One logical change per commit
-2. **Smart analysis** - AI-powered readiness assessment
-3. **Clean history** - Meaningful commit messages
-4. **Workflow automation** - Reduce manual git overhead
-
-## Support
-
-For issues or feature requests, please open an issue on [GitHub](https://github.com/nicoforclaude/claude-smart-git/issues).
-
-## License
-
-MIT License - See [LICENSE](LICENSE) file for details.
+---
 
 ## Version History
 
-- **0.2.0** - Restructured to plugin marketplace architecture
-  - Migrated to `.claude-plugin` structure
-  - Added `git` plugin containing all components
-  - Updated installation instructions for plugin approach
-  - **Breaking change**: Requires plugin installation method
-- **0.1.0** - Initial release with git-changes-analyzer skill, agent, and 5 commands
+- **0.2.0** — Migrated to plugin marketplace architecture (`.claude-plugin` structure). **Breaking change:** requires plugin installation method.
+- **0.1.0** — Initial release: changes-analyzer skill, agent, and 5 commands.
