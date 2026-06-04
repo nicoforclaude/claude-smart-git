@@ -71,6 +71,7 @@ Verify: `/plugin list`
 
 | Command | What it does |
 |---------|-------------|
+| `/git:worktree:add` | Add a new worktree as a numbered sibling slot (or named if topic given) |
 | `/git:worktree:show` | List all worktrees with branch and pending changes status |
 | `/git:worktree:pull-main` | Fetch `origin/main` and fast-forward all clean worktrees |
 
