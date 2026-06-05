@@ -1,7 +1,7 @@
 ---
 description: "Auto PR pipeline — detects what's needed (branch / commit / push / PR) and does it all in one shot"
 argument-hint: "[optional: topic hint for branch/PR naming]"
-allowed-tools: Bash, Read, AskUserQuestion, Skill(windows-shell:windows-shell)
+allowed-tools: Bash, Read, AskUserQuestion, Skill(windows-shell:windows-shell), Skill(git:branch:create)
 ---
 
 # Git: PR Create Auto
@@ -46,13 +46,25 @@ find . -maxdepth 6 \( -path "*/planning/*.md" -o -path "*/plans/*.md" \) 2>/dev/
 
 ## Step 3 — Determine required steps
 
+### Topic match check
+
+Before evaluating the table below, infer the PR topic from session context (files changed, subjects discussed).
+Then check whether the current branch reflects that topic:
+
+1. Strip any user prefix from the branch name (`nico/working-2` → `working-2`, `feat/game-summary` → `game-summary`)
+2. Extract the key slug words from the inferred topic (e.g. "game summary design" → `game`, `summary`, `design`)
+3. If none of those words appear in the stripped branch name → **topic mismatch**
+
+Generic names like `working`, `working-N`, `scratch`, `sandbox`, `dev`, `temp` are always a mismatch regardless of topic.
+
 | Condition | Required steps |
 |-----------|----------------|
-| On `main`, has uncommitted changes | branch → commit → push → PR |
-| On feature branch, has uncommitted changes | commit → push → PR |
-| On feature branch, committed but not pushed | push → PR |
-| On feature branch, pushed, no PR | PR only |
-| On feature branch, pushed, PR exists | STOP: show existing PR URL |
+| On `main` | branch → commit → push → PR |
+| On any branch, topic mismatch | branch → commit → push → PR |
+| On topic branch, has uncommitted changes | commit → push → PR |
+| On topic branch, committed but not pushed | push → PR |
+| On topic branch, pushed, no PR | PR only |
+| On topic branch, pushed, PR exists | STOP: show existing PR URL |
 | Nothing to commit, no commits ahead of main | STOP: "Nothing to PR." |
 
 ## Step 4 — Pre-commit safety checks (if commit needed)
@@ -69,9 +81,9 @@ If blocked: explain which file and why. Wait for user to fix before continuing.
 ## Step 5 — Prepare values
 
 **Branch name** (if branch creation needed):
-- Read convention doc if found; otherwise infer from existing branch names
 - Infer topic from `$ARGUMENTS` if provided, else from session context (files edited, work discussed)
-- Generate **one** best-fit name: kebab-case, lowercase, follows convention, reflects purpose
+- For the plan preview: generate one best-fit suggested name (kebab-case, lowercase, follows convention)
+- Final name is chosen interactively via `branch:create` during execution (3 options presented to user)
 
 **Commit message** (if commit needed):
 - Infer conventional commit type from diff stat: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `style`
@@ -100,7 +112,7 @@ Present a single confirmation with all concrete values:
 Current branch: {branch}
 
 Steps:
-  [1. Create branch:  feat/your-feature-name]   ← only if on main
+  [1. Create branch:  feat/your-feature-name (3 options via branch:create)]   ← if on main or topic mismatch
   [2. Commit:         "feat(scope): message"]    ← only if uncommitted changes
   [3. Push to origin]                            ← only if not pushed
   [4. Open PR:        "feat: your title"]
@@ -122,11 +134,15 @@ Run each planned step in sequence, reporting progress after each.
 
 ### Branch creation (if planned)
 
-```bash
-git checkout -b {branch-name}
+Delegate to `branch:create`, passing the inferred topic as the argument:
+
+```
+Skill(git:branch:create, "{topic hint}")
 ```
 
-Report: `✅ Created branch: {branch-name}`
+`branch:create` handles convention lookup, presents 3 name options for user confirmation, and runs `git checkout -b`.
+
+Report: `✅ Created branch: {chosen-name}`
 
 ### Commit (if planned)
 
