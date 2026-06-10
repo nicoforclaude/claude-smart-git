@@ -99,7 +99,7 @@ Once linting and safety checks pass, use the Task tool to launch the **changes-a
 ```
 Task(
   subagent_type: "git:changes-analyzer-agent",
-  prompt: "Analyze current git changes and recommend commit strategy. Return structured analysis with files, messages, and reasoning. IMPORTANT: By default, include meaningful untracked files (documentation, configuration, source code, etc.) in commit recommendations.",
+  prompt: "Analyze current git changes and recommend commit strategy. Return structured analysis with files, messages, and reasoning. CRITICAL: Include ALL meaningful untracked files (documentation, configuration, source code, etc.) in commit recommendations. Tracking status is NEVER a reason to exclude a file — `git add` stages both tracked and untracked files equally.",
   model: "haiku"
 )
 ```
@@ -440,6 +440,7 @@ You are the coordinator AND executor. Your job is to:
 - **DO execute git commands yourself** - don't delegate execution to agent
 - **DO warn about .gitignore changes** - require explicit confirmation
 - **DO NOT add AI attribution** - commits should be clean and professional
+- **DO NOT skip untracked files** — "was not tracked" is never a reason to exclude a file. `git add` stages both tracked and untracked files equally.
 - **Push only when user selects push option** - "Commit and push" or "Commit all and push"
 - Use heredoc format for commit messages to handle multi-line properly
 

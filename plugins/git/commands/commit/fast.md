@@ -96,7 +96,7 @@ Look for files matching `branch*.md` or `*branch-naming*`.
 
 **If "Commit only" or "Commit and push"**:
 
-1. Stage all changed files from `git status --short` (tracked modifications + meaningful untracked)
+1. Stage ALL files from `git status --short` — tracked modifications (`M`, `A`) and untracked (`??`) alike. Tracking status is never a reason to skip a file.
 2. Commit:
 ```bash
 git commit -m "$(cat <<'EOF'

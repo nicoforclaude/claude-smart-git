@@ -21,6 +21,9 @@ Classify each file by examining:
 - User docs outside `.claude/` → use `docs` type
 - Path check takes priority over extension
 
+**Untracked files (`??` in `git status --short`):**
+Read their content with `git diff --no-index /dev/null <file>`. If that fails, classify by path and extension alone. Tracking status is not a classification criterion — never exclude a file because it hasn't been added to git yet.
+
 ### 2. Assessing Readiness
 
 Scan diff content for quality signals:
@@ -169,4 +172,5 @@ See `examples.md` and `commit-patterns.md` for detailed scenarios.
 - Smaller focused commits preferred for reviewability
 - Match existing project commit message style
 - Clearly flag incomplete work
+- **Tracking status never excludes files** — `??` untracked files are staged with `git add` the same as modified tracked files. Never say "it was not tracked" to skip a commit candidate.
 
