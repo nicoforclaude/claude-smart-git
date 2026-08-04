@@ -99,8 +99,7 @@ Once linting and safety checks pass, use the Task tool to launch the **changes-a
 ```
 Task(
   subagent_type: "git:changes-analyzer-agent",
-  prompt: "Analyze current git changes and recommend commit strategy. Return structured analysis with files, messages, and reasoning. CRITICAL: Include ALL meaningful untracked files (documentation, configuration, source code, etc.) in commit recommendations. Tracking status is NEVER a reason to exclude a file — `git add` stages both tracked and untracked files equally.",
-  model: "haiku"
+  prompt: "Analyze current git changes and recommend commit strategy. Return structured analysis with files, messages, and reasoning. CRITICAL: Include ALL meaningful untracked files (documentation, configuration, source code, etc.) in commit recommendations. Tracking status is NEVER a reason to exclude a file — `git add` stages both tracked and untracked files equally."
 )
 ```
 
@@ -108,8 +107,7 @@ Task(
 ```
 Task(
   subagent_type: "git:changes-analyzer-agent",
-  prompt: "Analyze git changes for SESSION-SCOPED COMMIT. Only consider these files modified during this Claude Code session: [list session files here]. Exclude ALL other files from analysis, even if they appear in git status. Return structured analysis only for the session files that have git changes. If a session file has no git changes (clean), note it separately.",
-  model: "haiku"
+  prompt: "Analyze git changes for SESSION-SCOPED COMMIT. Only consider these files modified during this Claude Code session: [list session files here]. Exclude ALL other files from analysis, even if they appear in git status. Return structured analysis only for the session files that have git changes. If a session file has no git changes (clean), note it separately."
 )
 ```
 
@@ -287,8 +285,7 @@ Do not add mentions of AI used (Claude, other) in this work, it's just a tool, n
 ```
 Task(
   subagent_type: "git:changes-analyzer-agent",
-  prompt: "Re-analyze git changes and split them into multiple logical commits. Focus on separating concerns, layers (backend/frontend), or preparatory work vs features. Return multiple commits with files and messages for each. Do NOT execute any commits.",
-  model: "haiku"
+  prompt: "Re-analyze git changes and split them into multiple logical commits. Focus on separating concerns, layers (backend/frontend), or preparatory work vs features. Return multiple commits with files and messages for each. Do NOT execute any commits."
 )
 ```
 
@@ -296,8 +293,7 @@ Task(
 ```
 Task(
   subagent_type: "git:changes-analyzer-agent",
-  prompt: "Re-analyze and SPLIT into multiple logical commits. ONLY consider these session files: [list session files here]. Focus on separating concerns within session files. Return multiple commits with files and messages for each. Do NOT execute any commits.",
-  model: "haiku"
+  prompt: "Re-analyze and SPLIT into multiple logical commits. ONLY consider these session files: [list session files here]. Focus on separating concerns within session files. Return multiple commits with files and messages for each. Do NOT execute any commits."
 )
 ```
 
