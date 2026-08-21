@@ -63,9 +63,11 @@ For each deleted branch: git branch -d + git push origin --delete.
 Then: git checkout main && git pull origin main.
 ```
 
-Use `AskUserQuestion`:
-- "Yes, delete all listed"
+First print the full plan above as chat text (complete delete list, no truncation), then use `AskUserQuestion`:
+- "Yes, delete all listed" — with a `preview` containing the complete delete list plus a "Keep:" line with the protected branches
 - "Cancel"
+
+The user must see every branch to be deleted before answering — never truncate the list.
 
 ## Step 5 — Execute
 
