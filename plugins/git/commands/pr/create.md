@@ -1,6 +1,6 @@
 ---
 description: "Create a PR — infers title and body from session context, commits, and planning docs"
-allowed-tools: Bash, AskUserQuestion, Skill(windows-shell:windows-shell), Skill(git:commit), Skill(git:commit:fast)
+allowed-tools: Bash, AskUserQuestion, Skill(windows-shell:windows-shell), Skill(git:commit), Skill(git:commit:fast), Skill(git:pr:watch)
 ---
 
 # PR: Create
@@ -122,3 +122,7 @@ BODY
 ```
 
 Report the PR URL.
+
+## Step 8 — Live monitor (CI + review)
+
+Invoke `Skill(git:pr:watch)` with the PR number. It polls CI checks and the automated review comment in the background, fail-fast on red checks, and reports the outcome.

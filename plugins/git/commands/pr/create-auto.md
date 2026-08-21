@@ -1,7 +1,7 @@
 ---
 description: "Auto PR pipeline — diagnoses the situation (branch / commit / push / PR) and executes it all after one Go/No Go dialog"
 argument-hint: "[optional: topic hint for branch/PR naming]"
-allowed-tools: Bash, Read, AskUserQuestion, Skill(windows-shell:windows-shell)
+allowed-tools: Bash, Read, AskUserQuestion, Skill(windows-shell:windows-shell), Skill(git:pr:watch)
 ---
 
 # Git: PR Create Auto
@@ -220,3 +220,7 @@ Report: `✅ PR opened: {url}`
 After commit/push, no PR creation needed.
 
 Report: `✅ PR #{N} updated: {url}`
+
+## Step 8 — Live monitor (CI + review)
+
+After reporting the PR URL, invoke `Skill(git:pr:watch)` with the PR number. It polls CI checks and the automated review comment in the background, fail-fast on red checks, and reports the outcome.
