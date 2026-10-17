@@ -1,7 +1,7 @@
 ---
 description: "Auto PR pipeline — diagnoses the situation (branch / commit / push / PR) and executes it all after one Go/No Go dialog"
 argument-hint: "[optional: topic hint for branch/PR naming]"
-allowed-tools: Bash, Read, AskUserQuestion, Skill(windows-shell:windows-shell), Skill(git:pr:watch)
+allowed-tools: Bash, Read, Edit, Write, AskUserQuestion, Skill(windows-shell:windows-shell), Skill(git:pr:watch), Skill(code-review)
 ---
 
 # Git: PR Create Auto
@@ -115,7 +115,7 @@ If blocked: explain which file and why. Wait for user to fix before continuing.
 
 ## Step 6 — One dialog: situation report + Go List
 
-Classes F and G skip the dialog (see Step 3 table). For A–E, ask a single `AskUserQuestion` with one question.
+Classes F and G skip the dialog (see Step 3 table). For A–E, ask a single `AskUserQuestion` call with two questions: Go/No Go and Fixing mode.
 
 **Do NOT print the report or plan as chat text before the tool call** — mid-turn text may not be displayed. Everything the user must see goes inside the call: report in the question text, plans in option previews.
 
@@ -160,6 +160,19 @@ Files to stage:
 
 If "No Go": stop executing and ask what they'd like to change — this is an invitation to discuss, not a silent exit.
 
+**Question 2 — Fixing mode** (header: "Fixing mode"):
+
+```
+After the PR is up, how far should I take it?
+```
+
+| Option | Behavior |
+|--------|----------|
+| "Ready to merge (Recommended)" | Autonomous loop in Step 9: fix review findings and red CI, verify, push — until ready to merge or blocked on a decision |
+| "As is — no fixes" | Watch CI + review once, report findings, stop |
+
+**Choosing "Ready to merge" is explicit authorization to commit and push autonomously for this PR's fix loop** — no further confirmation per round.
+
 ## Step 7 — Execute
 
 Run each planned step in sequence, reporting progress after each.
@@ -188,6 +201,16 @@ EOF
 ```
 
 Report: `✅ Committed: [{hash}] {message}`
+
+### Inner review (before push)
+
+One local review per PR — the cycle breaker: review depth depends on whether a review has already seen this branch.
+
+- **Classes A–D (no PR yet):** invoke `Skill(code-review)` at **medium** effort on `origin/main..HEAD`.
+  - Critical findings → stop, present them, wait for the user.
+  - Warnings → report in one table and proceed.
+  - Clean → proceed.
+- **Class E (PR exists):** invoke `Skill(code-review)` at **low** effort on the unpushed diff only (`@{u}..HEAD`). **Report-only** — findings are shown but never block the push; the PR's CI review owns gating from here.
 
 ### Push (if planned)
 
@@ -223,4 +246,32 @@ Report: `✅ PR #{N} updated: {url}`
 
 ## Step 8 — Live monitor (CI + review)
 
-After reporting the PR URL, invoke `Skill(git:pr:watch)` with the PR number. It polls CI checks and the automated review comment in the background, fail-fast on red checks, and reports the outcome.
+After reporting the PR URL, invoke `Skill(git:pr:watch)` with the PR number. It polls CI checks and the automated review comment, fail-fast on red checks, and returns a triaged findings list (see its "Structured result" section).
+
+**Mode "As is":** report the watch outcome (CI status + findings table with triage verdicts), then stop. Suggest `/git:pr:code-review:resolve-one-by-one` if items need reaction.
+
+**Mode "Ready to merge":** continue to Step 9.
+
+## Step 9 — Ready-to-merge loop (max 3 rounds)
+
+Each round consumes the watch result:
+
+| Watch result | Action |
+|--------------|--------|
+| CI green + every finding triaged `no action` | **Done — ready to merge.** Report the URL plus each dismissed finding with its one-line why (the user audits the subjective call) |
+| Any `decision` finding | Stop the loop, present the tradeoff options, wait for the user |
+| Review-job auth failure | Stop — follow pr:watch's remediation path (never auto-run secret updates) |
+| `needs reaction` findings and/or red CI (tests/build/lint) | Fix round below |
+
+**Ready to merge is a triage verdict, not a badge color:** a red/orange review status does not block when every remaining finding is judged `no action`. Red CI checks (tests, build, lint) always do.
+
+### Fix round
+
+1. **Fix** only the `needs reaction` items and CI breakage. Never re-attempt a finding the review re-flagged after a previous fix — that escalates to the user instead.
+2. **Verify** — derive checks from CI, not guesses:
+   - Read `.github/workflows/*.yml`; collect the run steps of jobs triggered on `pull_request`/`push` (test, check, lint, build).
+   - Run those commands locally; all must pass before pushing.
+   - Run `Skill(code-review)` at **low** effort on the fix diff only (`@{u}..HEAD`). Report-only — its findings never trigger another fix round.
+3. **Commit and push** (authorized by the mode choice in Step 6), then invoke `Skill(git:pr:watch)` again.
+
+After 3 rounds without reaching ready-to-merge: stop and summarize what is still red and why.

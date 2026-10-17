@@ -64,6 +64,22 @@ Fetch the comment body and report:
    - `no action` — stale-comment nits already acceptable, intentional-state items, false positives → say why in one line
 3. If any item needs reaction, offer to fix on the same branch now (do not fix without a go)
 
+## Structured result (when invoked by another command)
+
+When invoked from a pipeline (e.g. `git:pr:create-auto`), skip the fix offer and end with a machine-consumable summary the caller acts on:
+
+```
+WATCH_RESULT
+ci: green | red:{check name} | review-auth-failure
+findings:
+  - verdict: needs-reaction | decision | no-action
+    where: {file:line or "review body"}
+    what: {one line}
+    why: {one-line triage reasoning}
+```
+
+Triage verdicts here are the same taxonomy as above; `no-action` items must carry their why — the caller surfaces them for audit, even when dismissing a red/orange review.
+
 ## On `REVIEW_TIMEOUT`
 
 Report that no review appeared within ~10 minutes and give the manual check commands:
