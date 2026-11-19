@@ -113,9 +113,36 @@ If blocked: explain which file and why. Wait for user to fix before continuing.
   {commit subjects from git log origin/main..HEAD}
   ```
 
+**Polish level** (classes A–E) — how far review findings get fixed before the PR counts as ready to merge. Prepare a recommendation:
+
+<!-- inlined from /docs/polish-scale.md -->
+Each anchor adds one kind of finding to the fix list; a level includes everything below it.
+
+| Polish | Name | Adds to the fix list | Typical use |
+|--------|------|----------------------|-------------|
+| 0 | Skip | Nothing from the review — only what blocks the merge (red CI) | spikes, throwaway |
+| 2 | Light | What breaks: crashes, data loss, security holes | dev pages, scripts |
+| 4 | Fair | What is wrong in some case: edge cases, error paths, a test asserting the wrong thing | admin tools, integration tests |
+| 6 | Solid | What will cost later: convention breaks, misleading names, duplication, a missing obvious test | features, UI |
+| 8 | Thorough | What a careful teammate would raise: structure, readability, thin test coverage | prod backend |
+| 10 | Hard | Everything, until the review has nothing left to say | shared core, public API |
+
+Odd numbers lean between neighbours: 3 is Light plus the cheap Fair items.
+
+**Polish rule:** fix what the level includes, dismiss the rest with a one-line why, and stop when a pass turns up nothing the level includes.
+
+Judge the recommendation from the changed file paths:
+
+1. **Project map** — if the project's CLAUDE.md maps areas to polish levels, use it
+2. **Otherwise** — match the paths against the "Typical use" column
+3. **Mixed PR** — take the level of the area holding most of the change; lean up when a higher-level area is touched non-trivially
+
+State the recommendation with a one-line reason: `4 Fair — 9 of 10 changed files are integration tests`.
+<!-- end inlined -->
+
 ## Step 6 — One dialog: situation report + Go List
 
-Classes F and G skip the dialog (see Step 3 table). For A–E, ask a single `AskUserQuestion` call with two questions: Go/No Go and Fixing mode.
+Classes F and G skip the dialog (see Step 3 table). For A–E, ask a single `AskUserQuestion` call with two questions: Go/No Go and Polish.
 
 **Do NOT print the report or plan as chat text before the tool call** — mid-turn text may not be displayed. Everything the user must see goes inside the call: report in the question text, plans in option previews.
 
@@ -160,18 +187,53 @@ Files to stage:
 
 If "No Go": stop executing and ask what they'd like to change — this is an invitation to discuss, not a silent exit.
 
-**Question 2 — Fixing mode** (header: "Fixing mode"):
+**Question 2 — Polish** (header: "Polish"):
+
+One question carries both choices: whether to fix at all ("As is" vs "Ready to merge") and, if so, down to which polish level.
+
+Question text — the recommendation from Step 5 with its reason:
 
 ```
 After the PR is up, how far should I take it?
+Recommended: 4 Fair — 9 of 10 changed files are integration tests
 ```
 
-| Option | Behavior |
-|--------|----------|
-| "Ready to merge (Recommended)" | Autonomous loop in Step 9: fix review findings and red CI, verify, push — until ready to merge or blocked on a decision |
-| "As is — no fixes" | Watch CI + review once, report findings, stop |
+Options (the tool allows 4):
 
-**Choosing "Ready to merge" is explicit authorization to commit and push autonomously for this PR's fix loop** — no further confirmation per round.
+| Option | Description | Behavior |
+|--------|-------------|----------|
+| "Ready to merge · {N} {Name} (Recommended)" | `Red CI + {what the level fixes}` | Autonomous loop in Step 9 at the recommended level |
+| "Ready to merge · {next anchor down}" | same pattern | Same loop, less polish — omit if the recommendation is 0 |
+| "Ready to merge · {next anchor up}" | same pattern | Same loop, more polish — omit if the recommendation is 10 |
+| "As is — no fixes" | `Watch CI + review once, report, stop` | No fix loop |
+
+A number 0–10 typed via "Other" means "Ready to merge" at that level. `0 Skip` still gets CI green — it just dismisses every review finding.
+
+**Choosing any "Ready to merge" option is explicit authorization to commit and push autonomously for this PR's fix loop** — no further confirmation per round.
+
+**Preview** on each "Ready to merge" option — the scale with `▶` on that option's level (inner review effort per Step 7):
+
+```
+Fix loop until ready to merge — commits and pushes without asking
+
+   0 Skip      red CI only                        ┐
+   2 Light     + what breaks                      │ fixed
+ ▶ 4 Fair      + what is wrong in some case       ┘
+   6 Solid     + what will cost later             ┐
+   8 Thorough  + what a careful teammate raises   │ dismissed,
+  10 Hard      + everything else                  ┘ each with a why
+
+Inner review before push: low
+```
+
+**Preview** on "As is — no fixes":
+
+```
+Watch CI + review once, report findings, stop.
+No fix commits, no pushes after the PR is up.
+
+Inner review before push: low
+```
 
 ## Step 7 — Execute
 
@@ -204,9 +266,10 @@ Report: `✅ Committed: [{hash}] {message}`
 
 ### Inner review (before push)
 
-One local review per PR — the cycle breaker: review depth depends on whether a review has already seen this branch.
+One local review per PR — the cycle breaker: review depth depends on the polish level and on whether a review has already seen this branch. With "As is", use the recommended level.
 
-- **Classes A–D (no PR yet):** invoke `Skill(code-review)` at **medium** effort on `origin/main..HEAD`.
+- **Polish 0:** skip the inner review.
+- **Classes A–D (no PR yet):** invoke `Skill(code-review)` on `origin/main..HEAD` — effort **low** for polish 1–4, **medium** for 5–7, **high** for 8–10.
   - Critical findings → stop, present them, wait for the user.
   - Warnings → report in one table and proceed.
   - Clean → proceed.
@@ -252,9 +315,9 @@ After reporting the PR URL, invoke `Skill(git:pr:watch)` with the PR number. It 
 
 **Mode "Ready to merge":** continue to Step 9.
 
-## Step 9 — Ready-to-merge loop (max 3 rounds)
+## Step 9 — Ready-to-merge loop
 
-Each round consumes the watch result:
+Each round consumes the watch result. First apply the polish rule (Step 5): a `needs reaction` finding the chosen level does not include becomes `no action` with the why `below polish {N}` — at polish 0 that is every finding. Then:
 
 | Watch result | Action |
 |--------------|--------|
@@ -274,4 +337,4 @@ Each round consumes the watch result:
    - Run `Skill(code-review)` at **low** effort on the fix diff only (`@{u}..HEAD`). Report-only — its findings never trigger another fix round.
 3. **Commit and push** (authorized by the mode choice in Step 6), then invoke `Skill(git:pr:watch)` again.
 
-After 3 rounds without reaching ready-to-merge: stop and summarize what is still red and why.
+There is no round limit — the loop ends on "Done". If a round opens as many findings as it closed, it is not converging: stop and summarize what is still open and why.
